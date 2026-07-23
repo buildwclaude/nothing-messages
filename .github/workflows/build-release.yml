@@ -34,8 +34,14 @@ jobs:
           gradle-version: "8.13"
 
       - name: Decode signing keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ runner.temp }}/release.p12
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "${{ runner.temp }}/release.p12"
+          else
+            echo "No keystore secret set — release will fall back to debug signing."
+          fi
 
       - name: Build release APK
         env:
