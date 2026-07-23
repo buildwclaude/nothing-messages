@@ -56,8 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.buildwclaude.messages.R
 import com.buildwclaude.messages.core.ui.components.Avatar
-import com.buildwclaude.messages.core.ui.components.ClawdCrab
-import com.buildwclaude.messages.core.ui.components.TimeWheel
+import com.buildwclaude.messages.core.ui.components.DateWheel
 import com.buildwclaude.messages.core.ui.components.UnreadBadge
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.core.ui.theme.palette
@@ -83,7 +82,6 @@ fun ConversationsScreen(
     viewModel: ConversationsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val timeWindow by viewModel.timeWindow.collectAsStateWithLifecycle()
     var searchOpen by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(pageCount = { PAGES.size })
     val scope = rememberCoroutineScope()
@@ -92,7 +90,7 @@ fun ConversationsScreen(
         containerColor = palette.Surface,
         bottomBar = {
             Column(Modifier.background(palette.Surface)) {
-                TimeWheel(selected = timeWindow, onSelect = viewModel::setTimeWindow)
+                DateWheel(onCutoffChange = viewModel::setDateCutoff)
                 HorizontalDivider(color = palette.Divider)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -191,8 +189,6 @@ fun ConversationsScreen(
                         .padding(bottom = 8.dp),
                 )
             } else {
-                // Clawd lives in the spare space above the chats.
-                ClawdCrab()
                 FilterChips(
                     currentPage = pagerState.currentPage,
                     onSelect = { page -> scope.launch { pagerState.animateScrollToPage(page) } },

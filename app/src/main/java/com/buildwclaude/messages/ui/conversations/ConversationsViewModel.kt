@@ -51,7 +51,8 @@ class ConversationsViewModel @Inject constructor(
 
     private val searchQuery = MutableStateFlow("")
     private val roleRefresh = MutableStateFlow(0)
-    val timeWindow = MutableStateFlow(com.buildwclaude.messages.core.ui.components.TimeWindow.ALL)
+    // 0 = show all; otherwise hide conversations whose last message is before this instant.
+    val dateCutoff = MutableStateFlow(0L)
 
     // Reload on provider changes AND on explicit refreshes (permission/role grants
     // don't fire the ContentObserver, so screen-resume bumps roleRefresh).
@@ -62,9 +63,9 @@ class ConversationsViewModel @Inject constructor(
         rawConversations,
         threadSettings.observeAll(),
         searchQuery,
-        timeWindow,
+        dateCutoff,
         roleRefresh,
-    ) { convs, settings, query, window, _ ->
+    ) { convs, settings, query, cutoff, _ ->
         val settingsMap = settings.associateBy { it.threadId }
         val decorated = convs.map { c ->
             val s = settingsMap[c.threadId]
@@ -74,7 +75,6 @@ class ConversationsViewModel @Inject constructor(
                 muted = s?.muted == true,
             )
         }
-        val cutoff = window.cutoff()
         val timed = if (cutoff <= 0) decorated else decorated.filter { it.date >= cutoff }
         val searched = if (query.isBlank()) timed else {
             val matchingThreads = telephony.searchThreads(query).toSet()
@@ -94,7 +94,7 @@ class ConversationsViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ConversationsUiState())
 
     fun setSearch(q: String) { searchQuery.value = q }
-    fun setTimeWindow(w: com.buildwclaude.messages.core.ui.components.TimeWindow) { timeWindow.value = w }
+    fun setDateCutoff(cutoff: Long) { dateCutoff.value = cutoff }
     fun refreshRole() { roleRefresh.value++ ; contacts.invalidate() }
 
     private suspend fun setting(threadId: Long) =
