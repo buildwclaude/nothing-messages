@@ -82,6 +82,7 @@ fun ConversationsScreen(
     viewModel: ConversationsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val haptics by viewModel.haptics.collectAsStateWithLifecycle()
     var searchOpen by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(pageCount = { PAGES.size })
     val scope = rememberCoroutineScope()
@@ -90,7 +91,7 @@ fun ConversationsScreen(
         containerColor = palette.Surface,
         bottomBar = {
             Column(Modifier.background(palette.Surface)) {
-                DateWheel(onCutoffChange = viewModel::setDateCutoff)
+                DateWheel(hapticsEnabled = haptics, onCutoffChange = viewModel::setDateCutoff)
                 HorizontalDivider(color = palette.Divider)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

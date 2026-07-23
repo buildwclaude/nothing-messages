@@ -270,6 +270,16 @@ fun SettingsScreen(
                     onChange = viewModel.prefs::setBlockScreenshots,
                 )
             }
+            item {
+                val haptics by viewModel.prefs.haptics.collectAsStateWithLifecycle()
+                PrivacyToggle(
+                    title = "Haptic feedback",
+                    subtitle = "Vibrate on the date/time dials as each value ticks by.",
+                    icon = R.drawable.ic_haptic,
+                    checked = haptics,
+                    onChange = viewModel.prefs::setHaptics,
+                )
+            }
 
             item {
                 Text(

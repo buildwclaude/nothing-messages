@@ -70,8 +70,10 @@ class ThreadViewModel @Inject constructor(
     private val threadSettings: ThreadSettingDao,
     private val notifier: MessageNotifier,
     private val defaultRole: DefaultSmsRole,
+    prefs: com.buildwclaude.messages.data.prefs.AppPrefs,
 ) : ViewModel() {
 
+    val haptics = prefs.haptics
     private val addressArg: String? = savedState.get<String>("address")?.takeIf { it.isNotBlank() }
     private val threadIdFlow = MutableStateFlow(savedState.get<Long>("threadId") ?: -1L)
     private val recipientsFlow = MutableStateFlow<List<Recipient>>(emptyList())

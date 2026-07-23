@@ -179,8 +179,10 @@ fun ThreadScreen(
     }
 
     if (scheduleSheetOpen) {
+        val haptics by viewModel.haptics.collectAsStateWithLifecycle()
         ScheduleSheet(
             canScheduleExact = state.canScheduleExact,
+            hapticsEnabled = haptics,
             onDismiss = { scheduleSheetOpen = false },
             onSchedule = { time ->
                 scheduleSheetOpen = false

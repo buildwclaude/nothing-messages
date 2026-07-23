@@ -47,8 +47,10 @@ class ConversationsViewModel @Inject constructor(
     private val blockedDao: BlockedNumberDao,
     private val contacts: ContactsRepository,
     val defaultRole: DefaultSmsRole,
+    prefs: com.buildwclaude.messages.data.prefs.AppPrefs,
 ) : ViewModel() {
 
+    val haptics = prefs.haptics
     private val searchQuery = MutableStateFlow("")
     private val roleRefresh = MutableStateFlow(0)
     // 0 = show all; otherwise hide conversations whose last message is before this instant.
