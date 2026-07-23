@@ -15,6 +15,10 @@ public final class Assert {
         if (obj != null) Log.wtf(TAG, "Expected null but was: " + obj);
     }
 
+    public static void isNull(final Object obj, final String message) {
+        if (obj != null) Log.wtf(TAG, message);
+    }
+
     public static void notNull(final Object obj) {
         if (obj == null) Log.wtf(TAG, "Expected non-null");
     }

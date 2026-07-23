@@ -8,7 +8,12 @@ import android.util.Log;
 
 public final class LogUtil {
     public static final String BUGLE_TAG = "Messages";
-    public static final boolean DEBUG = false;
+    // Log-level constants mirroring android.util.Log, as AOSP's LogUtil defines them.
+    public static final int VERBOSE = Log.VERBOSE;
+    public static final int DEBUG = Log.DEBUG;
+    public static final int INFO = Log.INFO;
+    public static final int WARN = Log.WARN;
+    public static final int ERROR = Log.ERROR;
 
     private LogUtil() {}
 
