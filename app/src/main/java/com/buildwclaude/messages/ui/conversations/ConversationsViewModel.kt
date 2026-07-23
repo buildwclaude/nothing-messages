@@ -46,7 +46,10 @@ class ConversationsViewModel @Inject constructor(
     private val searchQuery = MutableStateFlow("")
     private val roleRefresh = MutableStateFlow(0)
 
-    private val rawConversations = telephony.changes().mapLatest { telephony.loadConversations() }
+    // Reload on provider changes AND on explicit refreshes (permission/role grants
+    // don't fire the ContentObserver, so screen-resume bumps roleRefresh).
+    private val rawConversations = combine(telephony.changes(), roleRefresh) { _, _ -> }
+        .mapLatest { telephony.loadConversations() }
 
     val state = combine(
         rawConversations,

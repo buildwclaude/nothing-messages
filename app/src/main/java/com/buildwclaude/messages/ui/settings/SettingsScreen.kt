@@ -43,7 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.buildwclaude.messages.BuildConfig
 import com.buildwclaude.messages.R
-import com.buildwclaude.messages.core.ui.theme.DesignColors
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.core.util.PhoneNumbers
 import com.buildwclaude.messages.data.backup.BackupRepository
@@ -142,7 +142,7 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DesignColors.Surface)
+            .background(palette.Surface)
             .statusBarsPadding(),
     ) {
         Row(
@@ -152,10 +152,10 @@ fun SettingsScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     painterResource(R.drawable.ic_chevron_left), "Back",
-                    tint = DesignColors.TextSecondary,
+                    tint = palette.TextSecondary,
                 )
             }
-            Text("Settings", style = DesignType.screenTitle, color = DesignColors.TextPrimary)
+            Text("Settings", style = DesignType.screenTitle, color = palette.TextPrimary)
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -225,7 +225,7 @@ fun SettingsScreen(
                     Text(
                         it,
                         style = DesignType.body,
-                        color = DesignColors.Success,
+                        color = palette.Success,
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
                     )
                 }
@@ -235,7 +235,7 @@ fun SettingsScreen(
                 Text(
                     "Blocked numbers",
                     style = DesignType.screenTitle,
-                    color = DesignColors.TextPrimary,
+                    color = palette.TextPrimary,
                     modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 8.dp),
                 )
             }
@@ -257,7 +257,7 @@ fun SettingsScreen(
                     Text(
                         "Block",
                         style = DesignType.itemTitle,
-                        color = DesignColors.Blue,
+                        color = palette.Blue,
                         modifier = Modifier
                             .clickable {
                                 viewModel.addBlocked(newBlocked)
@@ -274,19 +274,19 @@ fun SettingsScreen(
                 ) {
                     Icon(
                         painterResource(R.drawable.ic_slash), null,
-                        tint = DesignColors.Error, modifier = Modifier.size(16.dp),
+                        tint = palette.Error, modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
                         b.normalizedAddress,
                         style = DesignType.bodyLarge,
-                        color = DesignColors.TextPrimary,
+                        color = palette.TextPrimary,
                         modifier = Modifier.weight(1f),
                     )
                     Text(
                         "Unblock",
                         style = DesignType.label,
-                        color = DesignColors.Blue,
+                        color = palette.Blue,
                         modifier = Modifier
                             .clickable { viewModel.removeBlocked(b.normalizedAddress) }
                             .padding(4.dp),
@@ -298,12 +298,12 @@ fun SettingsScreen(
                 Column(Modifier.padding(24.dp)) {
                     Text(
                         "Messages ${BuildConfig.VERSION_NAME}",
-                        style = DesignType.body, color = DesignColors.MutedText,
+                        style = DesignType.body, color = palette.MutedText,
                     )
                     Text(
                         "SMS & MMS only — RCS is not available to third-party apps. " +
                             "This app makes no network connections of its own.",
-                        style = DesignType.body, color = DesignColors.MutedText,
+                        style = DesignType.body, color = palette.MutedText,
                     )
                 }
             }
@@ -325,25 +325,25 @@ private fun SettingCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (highlight) DesignColors.Blue else DesignColors.IncomingBubble)
+            .background(if (highlight) palette.Blue else palette.IncomingBubble)
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
         Icon(
             painterResource(icon), null,
-            tint = if (highlight) DesignColors.Surface else DesignColors.Blue,
+            tint = if (highlight) palette.Surface else palette.Blue,
             modifier = Modifier.size(22.dp),
         )
         Spacer(Modifier.width(16.dp))
         Column {
             Text(
                 title, style = DesignType.itemTitle,
-                color = if (highlight) DesignColors.Surface else DesignColors.TextPrimary,
+                color = if (highlight) palette.Surface else palette.TextPrimary,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 subtitle, style = DesignType.body,
-                color = if (highlight) DesignColors.Surface.copy(alpha = 0.85f) else DesignColors.TextSecondary,
+                color = if (highlight) palette.Surface.copy(alpha = 0.85f) else palette.TextSecondary,
             )
         }
     }

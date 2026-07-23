@@ -72,7 +72,7 @@ class TelephonyRepository @Inject constructor(
                     )
                 }
             }
-        }
+        }.onFailure { android.util.Log.e("Messages", "loadConversations failed", it) }
         conversations
     }
 

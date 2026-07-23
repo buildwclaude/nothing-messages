@@ -32,7 +32,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.buildwclaude.messages.R
-import com.buildwclaude.messages.core.ui.theme.DesignColors
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.core.util.Formatters
 import com.buildwclaude.messages.data.db.ScheduledMessageDao
@@ -68,7 +68,7 @@ fun ScheduledScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DesignColors.Surface)
+            .background(palette.Surface)
             .statusBarsPadding(),
     ) {
         Row(
@@ -78,10 +78,10 @@ fun ScheduledScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     painterResource(R.drawable.ic_chevron_left), "Back",
-                    tint = DesignColors.TextSecondary,
+                    tint = palette.TextSecondary,
                 )
             }
-            Text("Scheduled", style = DesignType.screenTitle, color = DesignColors.TextPrimary)
+            Text("Scheduled", style = DesignType.screenTitle, color = palette.TextPrimary)
         }
 
         if (items.isEmpty()) {
@@ -91,16 +91,16 @@ fun ScheduledScreen(
             ) {
                 Icon(
                     painterResource(R.drawable.ic_clock), null,
-                    tint = DesignColors.Placeholder, modifier = Modifier.size(48.dp),
+                    tint = palette.Placeholder, modifier = Modifier.size(48.dp),
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "Nothing scheduled",
-                    style = DesignType.bodyLarge, color = DesignColors.TextSecondary,
+                    style = DesignType.bodyLarge, color = palette.TextSecondary,
                 )
                 Text(
                     "Long-press the send button in any chat to schedule a message.",
-                    style = DesignType.body, color = DesignColors.MutedText,
+                    style = DesignType.body, color = palette.MutedText,
                 )
             }
         }
@@ -113,7 +113,7 @@ fun ScheduledScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(DesignColors.IncomingBubble)
+                        .background(palette.IncomingBubble)
                         .clickable { entity.threadId?.let(onOpenThread) }
                         .padding(12.dp),
                 ) {
@@ -121,7 +121,7 @@ fun ScheduledScreen(
                         Icon(
                             painterResource(if (failed) R.drawable.ic_alert_circle else R.drawable.ic_clock),
                             null,
-                            tint = if (failed) DesignColors.Error else DesignColors.Blue,
+                            tint = if (failed) palette.Error else palette.Blue,
                             modifier = Modifier.size(14.dp),
                         )
                         Spacer(Modifier.width(6.dp))
@@ -129,14 +129,14 @@ fun ScheduledScreen(
                             if (failed) "Failed — ${entity.lastError ?: "could not send"}"
                             else Formatters.fullDateTime(context, entity.sendAt),
                             style = DesignType.label,
-                            color = if (failed) DesignColors.Error else DesignColors.Blue,
+                            color = if (failed) palette.Error else palette.Blue,
                         )
                     }
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "To: " + entity.recipients.replace("|", ", "),
                         style = DesignType.body,
-                        color = DesignColors.TextSecondary,
+                        color = palette.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -144,7 +144,7 @@ fun ScheduledScreen(
                     Text(
                         entity.body,
                         style = DesignType.bodyLarge,
-                        color = DesignColors.TextPrimary,
+                        color = palette.TextPrimary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -153,7 +153,7 @@ fun ScheduledScreen(
                         Text(
                             "Send now",
                             style = DesignType.label,
-                            color = DesignColors.Blue,
+                            color = palette.Blue,
                             modifier = Modifier
                                 .clickable { viewModel.sendNow(entity.id) }
                                 .padding(end = 20.dp),
@@ -161,7 +161,7 @@ fun ScheduledScreen(
                         Text(
                             "Cancel",
                             style = DesignType.label,
-                            color = DesignColors.Error,
+                            color = palette.Error,
                             modifier = Modifier.clickable { viewModel.cancel(entity.id) },
                         )
                     }

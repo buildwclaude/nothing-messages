@@ -66,5 +66,7 @@ round caps — visually equivalent. No Compose Material icon placeholders are us
 - **"7 Online, from 12 peoples"** group subtitle → replaced with member count / number.
 - The design's bottom-nav "Calls" tab → dropped (see screen table). Nav bar carries
   Chats / Scheduled / Settings with the design's floating FAB.
-- The design is light-mode only; the app ships light-only for fidelity (dark mode would be
-  an invented palette — can be added later if wanted).
+- The design is light-mode only; at the owner's request the app now also ships a **dark palette**
+  (follows the system setting) and swaps typography to **Doto** (dot-matrix, Nothing-style
+  headings) + **Space Grotesk** (body) — both SIL OFL, bundled. The original Figma palette
+  remains the light theme.

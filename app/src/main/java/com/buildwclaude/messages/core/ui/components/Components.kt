@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.buildwclaude.messages.core.ui.theme.DesignColors
-import com.buildwclaude.messages.core.ui.theme.PlusJakarta
+import com.buildwclaude.messages.core.ui.theme.palette
+import com.buildwclaude.messages.core.ui.theme.SpaceGrotesk
 import com.buildwclaude.messages.domain.model.Recipient
 import kotlin.math.absoluteValue
 
@@ -46,7 +46,7 @@ fun Avatar(recipient: Recipient?, size: Dp, modifier: Modifier = Modifier) {
             Text(
                 text = initials(name),
                 color = color,
-                fontFamily = PlusJakarta,
+                fontFamily = SpaceGrotesk,
                 fontWeight = FontWeight.Medium,
                 fontSize = (size.value * 0.36f).sp,
             )
@@ -67,12 +67,12 @@ private fun initials(name: String): String {
 fun UnreadBadge(count: Int, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.size(24.dp).clip(CircleShape).background(DesignColors.Blue),
+        modifier = modifier.size(24.dp).clip(CircleShape).background(palette.Blue),
     ) {
         Text(
             text = if (count > 99) "99+" else count.toString(),
             color = Color.White,
-            fontFamily = PlusJakarta,
+            fontFamily = SpaceGrotesk,
             fontWeight = FontWeight.Bold,
             fontSize = 10.sp,
         )

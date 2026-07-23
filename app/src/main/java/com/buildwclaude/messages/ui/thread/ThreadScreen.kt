@@ -59,7 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.buildwclaude.messages.R
 import com.buildwclaude.messages.core.ui.components.Avatar
-import com.buildwclaude.messages.core.ui.theme.DesignColors
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.core.util.Formatters
 import com.buildwclaude.messages.data.db.ScheduledMessageEntity
@@ -96,12 +96,12 @@ fun ThreadScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DesignColors.Surface)
+            .background(palette.Surface)
             .statusBarsPadding()
             .imePadding(),
     ) {
         ThreadTopBar(state, onBack, viewModel, onOpenScheduled)
-        HorizontalDivider(color = DesignColors.Divider)
+        HorizontalDivider(color = palette.Divider)
 
         Box(Modifier.weight(1f)) {
             LazyColumn(
@@ -147,17 +147,17 @@ fun ThreadScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(DesignColors.SurfaceSubtle)
+                    .background(palette.SurfaceSubtle)
                     .padding(horizontal = 16.dp, vertical = 6.dp),
             ) {
                 Icon(
                     painterResource(R.drawable.ic_clock), null,
-                    tint = DesignColors.Blue, modifier = Modifier.size(14.dp),
+                    tint = palette.Blue, modifier = Modifier.size(14.dp),
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     "Editing scheduled message — send now or pick a new time",
-                    style = DesignType.body, color = DesignColors.TextSecondary,
+                    style = DesignType.body, color = palette.TextSecondary,
                 )
             }
         }
@@ -239,13 +239,13 @@ private fun ThreadTopBar(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .background(DesignColors.Surface)
+            .background(palette.Surface)
             .padding(horizontal = 8.dp, vertical = 10.dp),
     ) {
         IconButton(onClick = onBack) {
             Icon(
                 painterResource(R.drawable.ic_chevron_left), "Back",
-                tint = DesignColors.TextSecondary,
+                tint = palette.TextSecondary,
             )
         }
         Avatar(state.recipients.firstOrNull(), size = 44.dp)
@@ -254,7 +254,7 @@ private fun ThreadTopBar(
             Text(
                 state.title,
                 style = DesignType.screenTitle,
-                color = DesignColors.TextPrimary,
+                color = palette.TextPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -262,7 +262,7 @@ private fun ThreadTopBar(
                 if (state.isGroup) "${state.recipients.size} people"
                 else state.recipients.firstOrNull()?.address ?: "",
                 style = DesignType.body,
-                color = DesignColors.TextSecondary,
+                color = palette.TextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -277,7 +277,7 @@ private fun ThreadTopBar(
             }) {
                 Icon(
                     painterResource(R.drawable.ic_phone), "Call",
-                    tint = DesignColors.TextSecondary, modifier = Modifier.size(20.dp),
+                    tint = palette.TextSecondary, modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -285,7 +285,7 @@ private fun ThreadTopBar(
             IconButton(onClick = { menuOpen = true }) {
                 Icon(
                     painterResource(R.drawable.ic_more_vertical), "More",
-                    tint = DesignColors.TextSecondary,
+                    tint = palette.TextSecondary,
                 )
             }
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -311,7 +311,7 @@ private fun DateSeparator(millis: Long) {
         Text(
             Formatters.dateSeparator(millis),
             fontSize = 10.sp,
-            color = DesignColors.MutedText,
+            color = palette.MutedText,
         )
     }
 }
@@ -329,9 +329,9 @@ private fun MessageBubble(
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
     val incoming = message.isIncoming
-    val bubbleColor = if (incoming) DesignColors.IncomingBubble else DesignColors.Blue
-    val textColor = if (incoming) DesignColors.TextPrimary else Color.White
-    val timeColor = if (incoming) DesignColors.MutedText else Color.White.copy(alpha = 0.7f)
+    val bubbleColor = if (incoming) palette.IncomingBubble else palette.Blue
+    val textColor = if (incoming) palette.TextPrimary else Color.White
+    val timeColor = if (incoming) palette.MutedText else Color.White.copy(alpha = 0.7f)
 
     Row(
         modifier = Modifier
@@ -355,8 +355,8 @@ private fun MessageBubble(
                         Text(
                             message.address,
                             style = DesignType.label,
-                            color = DesignColors.SenderAccents[
-                                message.address.hashCode().absoluteValue % DesignColors.SenderAccents.size,
+                            color = palette.SenderAccents[
+                                message.address.hashCode().absoluteValue % palette.SenderAccents.size,
                             ],
                         )
                         Spacer(Modifier.height(4.dp))
@@ -449,13 +449,13 @@ private fun MessageBubble(
                     ) {
                         Icon(
                             painterResource(R.drawable.ic_refresh_cw), null,
-                            tint = DesignColors.Error, modifier = Modifier.size(12.dp),
+                            tint = palette.Error, modifier = Modifier.size(12.dp),
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             "Not sent. Tap to retry",
                             fontSize = 10.sp,
-                            color = DesignColors.Error,
+                            color = palette.Error,
                         )
                     }
                 }
@@ -486,7 +486,7 @@ private fun MessageBubble(
                     menuOpen = false
                 })
                 DropdownMenuItem(
-                    text = { Text("Delete", color = DesignColors.Error) },
+                    text = { Text("Delete", color = palette.Error) },
                     onClick = { onDelete(); menuOpen = false },
                 )
             }
@@ -512,36 +512,36 @@ private fun ScheduledBubble(
                 modifier = Modifier
                     .widthIn(max = 280.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .border(1.dp, DesignColors.Blue, RoundedCornerShape(8.dp))
-                    .background(DesignColors.Surface)
+                    .border(1.dp, palette.Blue, RoundedCornerShape(8.dp))
+                    .background(palette.Surface)
                     .padding(10.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         painterResource(R.drawable.ic_clock), null,
-                        tint = DesignColors.Blue, modifier = Modifier.size(12.dp),
+                        tint = palette.Blue, modifier = Modifier.size(12.dp),
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
                         "Scheduled · " + Formatters.fullDateTime(context, entity.sendAt),
                         fontSize = 10.sp,
-                        color = DesignColors.Blue,
+                        color = palette.Blue,
                     )
                 }
                 Spacer(Modifier.height(4.dp))
-                Text(entity.body, style = DesignType.body, color = DesignColors.TextPrimary)
+                Text(entity.body, style = DesignType.body, color = palette.TextPrimary)
             }
             Row {
                 Text(
                     "Edit",
                     style = DesignType.label,
-                    color = DesignColors.Blue,
+                    color = palette.Blue,
                     modifier = Modifier.clickable(onClick = onEdit).padding(6.dp),
                 )
                 Text(
                     "Cancel",
                     style = DesignType.label,
-                    color = DesignColors.Error,
+                    color = palette.Error,
                     modifier = Modifier.clickable(onClick = onCancel).padding(6.dp),
                 )
             }
@@ -580,8 +580,8 @@ private fun Composer(
         }
     }
 
-    Column(Modifier.background(DesignColors.Surface).navigationBarsPadding()) {
-        HorizontalDivider(color = DesignColors.Divider)
+    Column(Modifier.background(palette.Surface).navigationBarsPadding()) {
+        HorizontalDivider(color = palette.Divider)
 
         if (attachments.isNotEmpty()) {
             Row(
@@ -602,11 +602,11 @@ private fun Composer(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(DesignColors.IncomingBubble),
+                                    .background(palette.IncomingBubble),
                             ) {
                                 Icon(
                                     painterResource(R.drawable.ic_file_text), null,
-                                    tint = DesignColors.TextSecondary,
+                                    tint = palette.TextSecondary,
                                 )
                             }
                         }
@@ -615,7 +615,7 @@ private fun Composer(
                                 .align(Alignment.TopEnd)
                                 .size(18.dp)
                                 .clip(CircleShape)
-                                .background(DesignColors.Error)
+                                .background(palette.Error)
                                 .clickable { onRemoveAttachment(att) },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -638,16 +638,16 @@ private fun Composer(
             IconButton(onClick = { pickMedia.launch(arrayOf("image/*", "video/*", "audio/*", "text/x-vcard")) }) {
                 Icon(
                     painterResource(R.drawable.ic_paperclip), "Attach",
-                    tint = DesignColors.TextPrimary, modifier = Modifier.size(22.dp),
+                    tint = palette.TextPrimary, modifier = Modifier.size(22.dp),
                 )
             }
             TextField(
                 value = draft,
                 onValueChange = onDraftChange,
                 placeholder = {
-                    Text("Write a message...", style = DesignType.body, color = DesignColors.TextSecondary)
+                    Text("Write a message...", style = DesignType.body, color = palette.TextSecondary)
                 },
-                textStyle = DesignType.bodyLarge.copy(color = DesignColors.TextPrimary),
+                textStyle = DesignType.bodyLarge.copy(color = palette.TextPrimary),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -662,7 +662,7 @@ private fun Composer(
                 Text(
                     "SIM ${current.slotIndex + 1}",
                     style = DesignType.label,
-                    color = DesignColors.Blue,
+                    color = palette.Blue,
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .clickable {
@@ -675,7 +675,7 @@ private fun Composer(
             IconButton(onClick = onOpenSchedule, modifier = Modifier.size(36.dp)) {
                 Icon(
                     painterResource(R.drawable.ic_clock), "Schedule",
-                    tint = DesignColors.TextSecondary, modifier = Modifier.size(20.dp),
+                    tint = palette.TextSecondary, modifier = Modifier.size(20.dp),
                 )
             }
             Spacer(Modifier.width(4.dp))
@@ -684,7 +684,7 @@ private fun Composer(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (canSend) DesignColors.Blue else DesignColors.Placeholder)
+                    .background(if (canSend) palette.Blue else palette.Placeholder)
                     .combinedClickable(
                         onClick = { if (canSend) onSend() },
                         onLongClick = { if (canSend) onOpenSchedule() },
@@ -701,7 +701,7 @@ private fun Composer(
             Text(
                 "${segmentInfo.second} · ${segmentInfo.first} SMS",
                 fontSize = 10.sp,
-                color = DesignColors.MutedText,
+                color = palette.MutedText,
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(end = 20.dp, bottom = 4.dp),

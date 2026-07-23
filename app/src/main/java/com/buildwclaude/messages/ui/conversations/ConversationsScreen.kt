@@ -53,7 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.buildwclaude.messages.R
 import com.buildwclaude.messages.core.ui.components.Avatar
 import com.buildwclaude.messages.core.ui.components.UnreadBadge
-import com.buildwclaude.messages.core.ui.theme.DesignColors
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.core.util.Formatters
 import com.buildwclaude.messages.domain.model.Conversation
@@ -73,14 +73,29 @@ fun ConversationsScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
-        containerColor = DesignColors.Surface,
+        containerColor = palette.Surface,
         bottomBar = {
             BottomBar(
                 onHome = {},
                 onScheduled = onOpenScheduled,
                 onSettings = onOpenSettings,
-                onNewMessage = onNewMessage,
             )
+        },
+        floatingActionButton = {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(palette.Blue)
+                    .clickable(onClick = onNewMessage),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_plus),
+                    contentDescription = "New message",
+                    tint = Color.White,
+                )
+            }
         },
     ) { padding ->
         Column(
@@ -102,7 +117,7 @@ fun ConversationsScreen(
                 Text(
                     text = if (searchOpen) "Search" else "Recent Chats",
                     style = DesignType.screenTitle,
-                    color = DesignColors.TextPrimary,
+                    color = palette.TextPrimary,
                     modifier = Modifier.weight(1f),
                 )
                 IconButton(onClick = {
@@ -112,7 +127,7 @@ fun ConversationsScreen(
                     Icon(
                         painterResource(if (searchOpen) R.drawable.ic_x else R.drawable.ic_search),
                         contentDescription = "Search",
-                        tint = DesignColors.TextSecondary,
+                        tint = palette.TextSecondary,
                         modifier = Modifier.size(22.dp),
                     )
                 }
@@ -141,7 +156,7 @@ fun ConversationsScreen(
                         Text(
                             "Pinned Chats",
                             style = DesignType.screenTitle,
-                            color = DesignColors.TextPrimary,
+                            color = palette.TextPrimary,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                     }
@@ -174,7 +189,7 @@ fun ConversationsScreen(
                             Icon(
                                 painterResource(R.drawable.ic_message_circle),
                                 contentDescription = null,
-                                tint = DesignColors.Placeholder,
+                                tint = palette.Placeholder,
                                 modifier = Modifier.size(48.dp),
                             )
                             Spacer(Modifier.height(12.dp))
@@ -185,7 +200,7 @@ fun ConversationsScreen(
                                     else -> "No conversations yet"
                                 },
                                 style = DesignType.bodyLarge,
-                                color = DesignColors.TextSecondary,
+                                color = palette.TextSecondary,
                             )
                         }
                     }
@@ -195,7 +210,12 @@ fun ConversationsScreen(
         }
     }
 
-    LaunchedEffect(Unit) { viewModel.refreshRole() }
+    // Re-check role + reload conversations every time the screen returns to the
+    // foreground (e.g. right after the user grants the default-SMS role in Settings).
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        viewModel.refreshRole()
+        onPauseOrDispose { }
+    }
 }
 
 @Composable
@@ -206,7 +226,7 @@ private fun DefaultAppBanner(onRequest: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(DesignColors.Blue)
+            .background(palette.Blue)
             .clickable(onClick = onRequest)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
@@ -246,14 +266,14 @@ private fun FilterChips(current: ChatFilter, onSelect: (ChatFilter) -> Unit) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (selected) DesignColors.Blue else DesignColors.Surface)
+                    .background(if (selected) palette.Blue else palette.Surface)
                     .clickable { onSelect(filter) }
                     .padding(horizontal = 10.dp, vertical = 4.dp),
             ) {
                 Text(
                     label,
                     style = DesignType.body,
-                    color = if (selected) Color.White else DesignColors.TextPrimary,
+                    color = if (selected) Color.White else palette.TextPrimary,
                 )
             }
         }
@@ -268,7 +288,7 @@ private fun PinnedCard(c: Conversation, onClick: () -> Unit) {
             .width(167.dp)
             .height(102.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(DesignColors.IncomingBubble)
+            .background(palette.IncomingBubble)
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
@@ -278,20 +298,20 @@ private fun PinnedCard(c: Conversation, onClick: () -> Unit) {
             Text(
                 c.title,
                 style = DesignType.itemTitle,
-                color = DesignColors.TextPrimary,
+                color = palette.TextPrimary,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
             if (c.unreadCount > 0) {
-                Box(Modifier.size(12.dp).clip(CircleShape).background(DesignColors.Blue))
+                Box(Modifier.size(12.dp).clip(CircleShape).background(palette.Blue))
             }
         }
         Spacer(Modifier.weight(1f))
         Text(
             c.snippet ?: "",
             style = DesignType.body,
-            color = DesignColors.TextSecondary,
+            color = palette.TextSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -310,34 +330,41 @@ private fun ConversationRow(
     var menuOpen by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onArchive()
+            when (value) {
+                // Swipe right→left: archive.
+                SwipeToDismissBoxValue.EndToStart -> onArchive()
+                // Swipe left→right: toggle read/unread.
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    if (conversation.unreadCount > 0) viewModel.markRead(conversation)
+                    else viewModel.markUnread(conversation)
+                }
+                else -> {}
             }
-            false // snap back; the row disappears because the filter changes
+            false // snap back; the row updates/disappears via state instead
         },
     )
 
     SwipeToDismissBox(
         state = dismissState,
-        enableDismissFromStartToEnd = false,
         backgroundContent = {
+            val towardEnd = dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = if (towardEnd) Arrangement.Start else Arrangement.End,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(DesignColors.Blue)
+                    .background(if (towardEnd) palette.Success else palette.Blue)
                     .padding(horizontal = 24.dp),
             ) {
                 Icon(
-                    painterResource(R.drawable.ic_archive),
-                    contentDescription = "Archive",
+                    painterResource(if (towardEnd) R.drawable.ic_check else R.drawable.ic_archive),
+                    contentDescription = if (towardEnd) "Mark read/unread" else "Archive",
                     tint = Color.White,
                 )
             }
         },
     ) {
-        Box(Modifier.background(DesignColors.Surface)) {
+        Box(Modifier.background(palette.Surface)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -353,7 +380,7 @@ private fun ConversationRow(
                         Text(
                             conversation.title,
                             style = DesignType.itemTitle,
-                            color = DesignColors.TextPrimary,
+                            color = palette.TextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
@@ -363,7 +390,7 @@ private fun ConversationRow(
                             Icon(
                                 painterResource(R.drawable.ic_bell_off),
                                 contentDescription = "Muted",
-                                tint = DesignColors.MutedText,
+                                tint = palette.MutedText,
                                 modifier = Modifier.size(14.dp),
                             )
                         }
@@ -372,7 +399,7 @@ private fun ConversationRow(
                     Text(
                         conversation.snippet ?: "",
                         style = DesignType.body,
-                        color = DesignColors.TextSecondary,
+                        color = palette.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -383,7 +410,7 @@ private fun ConversationRow(
                         Formatters.conversationTime(context, conversation.date),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Normal,
-                        color = DesignColors.TimeText,
+                        color = palette.TimeText,
                     )
                     Spacer(Modifier.height(6.dp))
                     if (conversation.unreadCount > 0) {
@@ -420,7 +447,7 @@ private fun ConversationRow(
                     onClick = { viewModel.block(conversation); menuOpen = false },
                 )
                 DropdownMenuItem(
-                    text = { Text("Delete", color = DesignColors.Error) },
+                    text = { Text("Delete", color = palette.Error) },
                     onClick = { viewModel.delete(conversation); menuOpen = false },
                 )
             }
@@ -433,55 +460,37 @@ private fun BottomBar(
     onHome: () -> Unit,
     onScheduled: () -> Unit,
     onSettings: () -> Unit,
-    onNewMessage: () -> Unit,
 ) {
-    Box {
+    Column(Modifier.background(palette.Surface)) {
+        androidx.compose.material3.HorizontalDivider(color = palette.Divider)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(DesignColors.Surface)
-                .padding(top = 12.dp, bottom = 24.dp),
+                .padding(top = 8.dp, bottom = 20.dp),
         ) {
             IconButton(onClick = onHome) {
                 Icon(
                     painterResource(R.drawable.ic_message_circle),
                     contentDescription = "Chats",
-                    tint = DesignColors.Blue,
+                    tint = palette.Blue,
                 )
             }
             IconButton(onClick = onScheduled) {
                 Icon(
                     painterResource(R.drawable.ic_clock),
                     contentDescription = "Scheduled",
-                    tint = DesignColors.TextSecondary,
+                    tint = palette.TextSecondary,
                 )
             }
             IconButton(onClick = onSettings) {
                 Icon(
                     painterResource(R.drawable.ic_settings),
                     contentDescription = "Settings",
-                    tint = DesignColors.TextSecondary,
+                    tint = palette.TextSecondary,
                 )
             }
-        }
-        // The design's floating blue action button, overlapping the bar's top-right.
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = 24.dp)
-                .size(56.dp)
-                .clip(CircleShape)
-                .background(DesignColors.Blue)
-                .clickable(onClick = onNewMessage),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painterResource(R.drawable.ic_plus),
-                contentDescription = "New message",
-                tint = Color.White,
-            )
         }
     }
 }

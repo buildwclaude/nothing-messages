@@ -12,42 +12,58 @@ import androidx.compose.ui.unit.sp
 import com.buildwclaude.messages.R
 
 /**
- * The design uses "Plus Jakarta Display"; we bundle the open (SIL OFL) sibling
- * "Plus Jakarta Sans" as a variable font and pin the three weights the design uses.
+ * Headings: Doto (SIL OFL) — a dot-matrix face that matches the Nothing OS
+ * aesthetic. Body: Space Grotesk (SIL OFL) — geometric, techy, readable.
+ * Both are bundled; nothing is fetched at runtime.
  */
-val PlusJakarta = FontFamily(
+val Doto = FontFamily(
     Font(
-        R.font.plus_jakarta,
+        R.font.doto,
+        weight = FontWeight.Bold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(700)),
+    ),
+    Font(
+        R.font.doto,
+        weight = FontWeight.Black,
+        variationSettings = FontVariation.Settings(FontVariation.weight(900)),
+    ),
+)
+
+val SpaceGrotesk = FontFamily(
+    Font(
+        R.font.space_grotesk,
         weight = FontWeight.Normal,
         variationSettings = FontVariation.Settings(FontVariation.weight(400)),
     ),
     Font(
-        R.font.plus_jakarta,
+        R.font.space_grotesk,
         weight = FontWeight.Medium,
         variationSettings = FontVariation.Settings(FontVariation.weight(500)),
     ),
     Font(
-        R.font.plus_jakarta,
+        R.font.space_grotesk,
         weight = FontWeight.SemiBold,
         variationSettings = FontVariation.Settings(FontVariation.weight(600)),
     ),
     Font(
-        R.font.plus_jakarta,
+        R.font.space_grotesk,
         weight = FontWeight.Bold,
         variationSettings = FontVariation.Settings(FontVariation.weight(700)),
     ),
 )
 
-// Named styles matching the design's text scale.
 object DesignType {
-    val screenTitle = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Medium, fontSize = 18.sp)
-    val pageTitle = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Medium, fontSize = 24.sp)
-    val itemTitle = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Medium, fontSize = 14.sp)
-    val body = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 18.sp)
-    val bodyLarge = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp)
-    val label = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Medium, fontSize = 12.sp)
-    val caption = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Normal, fontSize = 10.sp)
-    val badge = TextStyle(fontFamily = PlusJakarta, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+    // Dot-matrix display styles for screen titles / section headers.
+    val pageTitle = TextStyle(fontFamily = Doto, fontWeight = FontWeight.Black, fontSize = 28.sp)
+    val screenTitle = TextStyle(fontFamily = Doto, fontWeight = FontWeight.Bold, fontSize = 21.sp)
+
+    // Readable UI text.
+    val itemTitle = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+    val body = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Normal, fontSize = 13.sp, lineHeight = 19.sp)
+    val bodyLarge = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
+    val label = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+    val caption = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Normal, fontSize = 11.sp)
+    val badge = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = 10.sp)
 }
 
 val MessagesTypography = Typography(

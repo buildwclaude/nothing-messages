@@ -33,7 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.buildwclaude.messages.R
-import com.buildwclaude.messages.core.ui.theme.DesignColors
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.core.util.Formatters
 import java.util.Calendar
@@ -52,17 +52,17 @@ fun ScheduleSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = DesignColors.Surface,
+        containerColor = palette.Surface,
         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
     ) {
         Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            Text("Send later", style = DesignType.screenTitle, color = DesignColors.TextPrimary)
+            Text("Send later", style = DesignType.screenTitle, color = palette.TextPrimary)
             Spacer(Modifier.height(4.dp))
             if (!canScheduleExact) {
                 Text(
                     "Exact alarms are off for this app — scheduled sends may be delayed a little. You can enable them in Settings.",
                     style = DesignType.body,
-                    color = DesignColors.Error,
+                    color = palette.Error,
                 )
                 Spacer(Modifier.height(8.dp))
             }
@@ -111,7 +111,7 @@ fun ScheduleSheet(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .background(DesignColors.Surface, RoundedCornerShape(24.dp))
+                    .background(palette.Surface, RoundedCornerShape(24.dp))
                     .padding(24.dp),
             ) {
                 TimePicker(state = timeState)
@@ -160,10 +160,10 @@ private fun PresetRow(label: String, icon: Int, onClick: () -> Unit) {
     ) {
         Icon(
             painterResource(icon), null,
-            tint = DesignColors.Blue,
+            tint = palette.Blue,
             modifier = Modifier.size(20.dp),
         )
         Spacer(Modifier.width(16.dp))
-        Text(label, style = DesignType.bodyLarge, color = DesignColors.TextPrimary)
+        Text(label, style = DesignType.bodyLarge, color = palette.TextPrimary)
     }
 }

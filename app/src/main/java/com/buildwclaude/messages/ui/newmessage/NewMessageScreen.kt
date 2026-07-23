@@ -35,7 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.buildwclaude.messages.R
 import com.buildwclaude.messages.core.ui.components.Avatar
-import com.buildwclaude.messages.core.ui.theme.DesignColors
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
 import com.buildwclaude.messages.data.telephony.ContactsRepository
 import com.buildwclaude.messages.domain.model.Recipient
@@ -85,7 +85,7 @@ fun NewMessageScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DesignColors.Surface)
+            .background(palette.Surface)
             .statusBarsPadding(),
     ) {
         Row(
@@ -95,20 +95,20 @@ fun NewMessageScreen(
             IconButton(onClick = onBack) {
                 Icon(
                     painterResource(R.drawable.ic_chevron_left), "Back",
-                    tint = DesignColors.TextSecondary,
+                    tint = palette.TextSecondary,
                 )
             }
             Text(
                 "New message",
                 style = DesignType.screenTitle,
-                color = DesignColors.TextPrimary,
+                color = palette.TextPrimary,
                 modifier = Modifier.weight(1f),
             )
             if (selected.isNotEmpty() || query.any { it.isDigit() }) {
                 Text(
                     "Next",
                     style = DesignType.itemTitle,
-                    color = DesignColors.Blue,
+                    color = palette.Blue,
                     modifier = Modifier
                         .clickable {
                             val addresses = selected.map { it.address }.ifEmpty {
@@ -133,7 +133,7 @@ fun NewMessageScreen(
                                 modifier = Modifier
                                     .padding(end = 8.dp)
                                     .clip(RoundedCornerShape(100.dp))
-                                    .background(DesignColors.Blue)
+                                    .background(palette.Blue)
                                     .clickable { viewModel.toggle(r) }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) {
@@ -172,16 +172,16 @@ fun NewMessageScreen(
                     ) {
                         Icon(
                             painterResource(R.drawable.ic_message_circle), null,
-                            tint = DesignColors.Blue, modifier = Modifier.size(24.dp),
+                            tint = palette.Blue, modifier = Modifier.size(24.dp),
                         )
                         Spacer(Modifier.width(16.dp))
                         Text(
                             "Send to ${query.trim()}",
                             style = DesignType.itemTitle,
-                            color = DesignColors.Blue,
+                            color = palette.Blue,
                         )
                     }
-                    HorizontalDivider(color = DesignColors.Divider)
+                    HorizontalDivider(color = palette.Divider)
                 }
             }
             items(results) { r ->
@@ -196,13 +196,13 @@ fun NewMessageScreen(
                     Avatar(r, size = 44.dp)
                     Spacer(Modifier.width(16.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(r.displayName, style = DesignType.itemTitle, color = DesignColors.TextPrimary)
-                        Text(r.address, style = DesignType.body, color = DesignColors.TextSecondary)
+                        Text(r.displayName, style = DesignType.itemTitle, color = palette.TextPrimary)
+                        Text(r.address, style = DesignType.body, color = palette.TextSecondary)
                     }
                     if (isSelected) {
                         Icon(
                             painterResource(R.drawable.ic_check_circle), "Selected",
-                            tint = DesignColors.Blue, modifier = Modifier.size(20.dp),
+                            tint = palette.Blue, modifier = Modifier.size(20.dp),
                         )
                     }
                 }

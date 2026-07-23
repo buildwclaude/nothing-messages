@@ -52,6 +52,17 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: gradle assembleRelease
 
+      - name: Verify the APK has NO internet permission (privacy gate)
+        run: |
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt | tail -1)
+          PERMS=$("$AAPT" dump permissions app/build/outputs/apk/release/app-release.apk)
+          echo "$PERMS"
+          if echo "$PERMS" | grep -qE "INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE"; then
+            echo "::error::APK contains a network permission — refusing to ship."
+            exit 1
+          fi
+          echo "Confirmed: no network permissions in the APK."
+
       - name: Upload APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:

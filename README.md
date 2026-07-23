@@ -7,7 +7,10 @@ on a Nothing Phone (3a) running Nothing OS 4.0 / Android 16. Sideload only — n
   indicators, read receipts, or end-to-end encryption with RCS users. Their chats fall back to SMS/MMS.
 - **No Google dependencies, no accounts, no servers.** The app itself has **no internet permission**.
   The only network activity is the carrier MMS transfer, which Android's own system service performs.
-- **UI** follows the "Messaging App UI" Figma community design (blue `#2F80ED`, Plus Jakarta typeface).
+- **UI** based on the "Messaging App UI" Figma community design (blue `#2F80ED`), with
+  light + dark themes and Nothing-style typography (Doto dot-matrix headings, Space Grotesk body).
+- **Verified no-network build:** CI inspects every APK and fails the build if any internet
+  permission is present.
 
 ## How to get the APK on your phone
 
