@@ -64,6 +64,7 @@ class SettingsViewModel @Inject constructor(
     private val backup: BackupRepository,
     private val blockedDao: BlockedNumberDao,
     val defaultRole: DefaultSmsRole,
+    val prefs: com.buildwclaude.messages.data.prefs.AppPrefs,
 ) : ViewModel() {
     val blocked = blockedDao.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -233,6 +234,45 @@ fun SettingsScreen(
 
             item {
                 Text(
+                    "Privacy & security",
+                    style = DesignType.screenTitle,
+                    color = palette.TextPrimary,
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(top = 24.dp, bottom = 8.dp),
+                )
+            }
+            item {
+                val appLock by viewModel.prefs.appLock.collectAsStateWithLifecycle()
+                PrivacyToggle(
+                    title = "App lock",
+                    subtitle = "Require fingerprint or screen lock to open Messages.",
+                    icon = R.drawable.ic_shield,
+                    checked = appLock,
+                    onChange = viewModel.prefs::setAppLock,
+                )
+            }
+            item {
+                val hide by viewModel.prefs.hideContent.collectAsStateWithLifecycle()
+                PrivacyToggle(
+                    title = "Hide message content in notifications",
+                    subtitle = "Pop-ups show only \"New message\" — protects codes and private texts.",
+                    icon = R.drawable.ic_bell_off,
+                    checked = hide,
+                    onChange = viewModel.prefs::setHideContent,
+                )
+            }
+            item {
+                val block by viewModel.prefs.blockScreenshots.collectAsStateWithLifecycle()
+                PrivacyToggle(
+                    title = "Block screenshots",
+                    subtitle = "Prevents screenshots and screen recording of this app.",
+                    icon = R.drawable.ic_slash,
+                    checked = block,
+                    onChange = viewModel.prefs::setBlockScreenshots,
+                )
+            }
+
+            item {
+                Text(
                     "Blocked numbers",
                     style = DesignType.screenTitle,
                     color = palette.TextPrimary,
@@ -308,6 +348,40 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PrivacyToggle(
+    title: String,
+    subtitle: String,
+    icon: Int,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(palette.IncomingBubble)
+            .clickable { onChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Icon(
+            painterResource(icon), null,
+            tint = palette.Blue,
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = DesignType.itemTitle, color = palette.TextPrimary)
+            Spacer(Modifier.height(2.dp))
+            Text(subtitle, style = DesignType.body, color = palette.TextSecondary)
+        }
+        Spacer(Modifier.width(8.dp))
+        androidx.compose.material3.Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 

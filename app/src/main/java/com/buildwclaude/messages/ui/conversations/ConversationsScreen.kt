@@ -1,12 +1,13 @@
 package com.buildwclaude.messages.ui.conversations
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,14 +20,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
@@ -34,15 +37,16 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,11 +56,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.buildwclaude.messages.R
 import com.buildwclaude.messages.core.ui.components.Avatar
+import com.buildwclaude.messages.core.ui.components.ClawdCrab
+import com.buildwclaude.messages.core.ui.components.TimeWheel
 import com.buildwclaude.messages.core.ui.components.UnreadBadge
-import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.ui.theme.DesignType
+import com.buildwclaude.messages.core.ui.theme.palette
 import com.buildwclaude.messages.core.util.Formatters
 import com.buildwclaude.messages.domain.model.Conversation
+import kotlinx.coroutines.launch
+
+private val PAGES = listOf(
+    ChatFilter.ALL to "All chats",
+    ChatFilter.UNREAD to "Unread",
+    ChatFilter.GROUPS to "Groups",
+    ChatFilter.ARCHIVED to "Archived",
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -69,17 +83,47 @@ fun ConversationsScreen(
     viewModel: ConversationsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val timeWindow by viewModel.timeWindow.collectAsStateWithLifecycle()
     var searchOpen by remember { mutableStateOf(false) }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val pagerState = rememberPagerState(pageCount = { PAGES.size })
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = palette.Surface,
         bottomBar = {
-            BottomBar(
-                onHome = {},
-                onScheduled = onOpenScheduled,
-                onSettings = onOpenSettings,
-            )
+            Column(Modifier.background(palette.Surface)) {
+                TimeWheel(selected = timeWindow, onSelect = viewModel::setTimeWindow)
+                HorizontalDivider(color = palette.Divider)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 20.dp),
+                ) {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            painterResource(R.drawable.ic_message_circle),
+                            contentDescription = "Chats",
+                            tint = palette.Blue,
+                        )
+                    }
+                    IconButton(onClick = onOpenScheduled) {
+                        Icon(
+                            painterResource(R.drawable.ic_clock),
+                            contentDescription = "Scheduled",
+                            tint = palette.TextSecondary,
+                        )
+                    }
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            painterResource(R.drawable.ic_settings),
+                            contentDescription = "Settings",
+                            tint = palette.TextSecondary,
+                        )
+                    }
+                }
+            }
         },
         floatingActionButton = {
             Box(
@@ -112,10 +156,10 @@ fun ConversationsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Text(
-                    text = if (searchOpen) "Search" else "Recent Chats",
+                    text = if (searchOpen) "Search" else "Messages",
                     style = DesignType.screenTitle,
                     color = palette.TextPrimary,
                     modifier = Modifier.weight(1f),
@@ -140,72 +184,33 @@ fun ConversationsScreen(
                     placeholder = { Text("Search messages and contacts", style = DesignType.body) },
                     textStyle = DesignType.bodyLarge,
                     singleLine = true,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 8.dp),
                 )
             } else {
-                FilterChips(current = state.filter, onSelect = viewModel::setFilter)
+                // Clawd lives in the spare space above the chats.
+                ClawdCrab()
+                FilterChips(
+                    currentPage = pagerState.currentPage,
+                    onSelect = { page -> scope.launch { pagerState.animateScrollToPage(page) } },
+                )
             }
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if (state.pinned.isNotEmpty()) {
-                    item {
-                        Text(
-                            "Pinned Chats",
-                            style = DesignType.screenTitle,
-                            color = palette.TextPrimary,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
-                    }
-                    item {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
-                        ) {
-                            items(state.pinned, key = { it.threadId }) { c ->
-                                PinnedCard(c) { onOpenThread(c.threadId, null) }
-                            }
-                        }
-                    }
-                    item { Spacer(Modifier.height(12.dp)) }
-                }
-                items(state.conversations, key = { it.threadId }) { c ->
-                    ConversationRow(
-                        conversation = c,
-                        onClick = { onOpenThread(c.threadId, null) },
-                        onArchive = { viewModel.toggleArchive(c) },
-                        viewModel = viewModel,
-                    )
-                }
-                if (!state.loading && state.conversations.isEmpty() && state.pinned.isEmpty()) {
-                    item {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth().padding(top = 96.dp),
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.ic_message_circle),
-                                contentDescription = null,
-                                tint = palette.Placeholder,
-                                modifier = Modifier.size(48.dp),
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            Text(
-                                when {
-                                    state.searchQuery.isNotBlank() -> "No results"
-                                    state.filter == ChatFilter.ARCHIVED -> "No archived chats"
-                                    else -> "No conversations yet"
-                                },
-                                style = DesignType.bodyLarge,
-                                color = palette.TextSecondary,
-                            )
-                        }
-                    }
-                }
-                item { Spacer(Modifier.height(80.dp)) }
+            HorizontalPager(
+                state = pagerState,
+                beyondViewportPageCount = 1,
+                modifier = Modifier.fillMaxSize(),
+            ) { page ->
+                val filter = PAGES[page].first
+                ConversationPage(
+                    filter = filter,
+                    state = state,
+                    onOpenThread = onOpenThread,
+                    viewModel = viewModel,
+                )
             }
         }
     }
@@ -219,13 +224,81 @@ fun ConversationsScreen(
 }
 
 @Composable
+private fun ConversationPage(
+    filter: ChatFilter,
+    state: ConversationsUiState,
+    onOpenThread: (Long, String?) -> Unit,
+    viewModel: ConversationsViewModel,
+) {
+    val rows = state.pageList(filter)
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        if (filter == ChatFilter.ALL && state.pinned.isNotEmpty()) {
+            item {
+                Text(
+                    "Pinned",
+                    style = DesignType.itemTitle,
+                    color = palette.TextPrimary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                ) {
+                    items(state.pinned, key = { it.threadId }) { c ->
+                        PinnedCard(c) { onOpenThread(c.threadId, null) }
+                    }
+                }
+            }
+            item { Spacer(Modifier.height(12.dp)) }
+        }
+        items(rows, key = { it.threadId }) { c ->
+            ConversationRow(
+                conversation = c,
+                onClick = { onOpenThread(c.threadId, null) },
+                viewModel = viewModel,
+            )
+        }
+        if (!state.loading && rows.isEmpty() && (filter != ChatFilter.ALL || state.pinned.isEmpty())) {
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth().padding(top = 72.dp),
+                ) {
+                    Icon(
+                        painterResource(R.drawable.ic_message_circle),
+                        contentDescription = null,
+                        tint = palette.Placeholder,
+                        modifier = Modifier.size(48.dp),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        when {
+                            state.searchQuery.isNotBlank() -> "No results"
+                            filter == ChatFilter.ARCHIVED -> "No archived chats"
+                            filter == ChatFilter.UNREAD -> "All caught up"
+                            filter == ChatFilter.GROUPS -> "No group chats"
+                            else -> "No conversations yet"
+                        },
+                        style = DesignType.bodyLarge,
+                        color = palette.TextSecondary,
+                    )
+                }
+            }
+        }
+        item { Spacer(Modifier.height(80.dp)) }
+    }
+}
+
+@Composable
 private fun DefaultAppBanner(onRequest: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(palette.Blue)
             .clickable(onClick = onRequest)
             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -249,30 +322,24 @@ private fun DefaultAppBanner(onRequest: () -> Unit) {
 }
 
 @Composable
-private fun FilterChips(current: ChatFilter, onSelect: (ChatFilter) -> Unit) {
-    val labels = listOf(
-        ChatFilter.ALL to "All chats",
-        ChatFilter.UNREAD to "Unread",
-        ChatFilter.GROUPS to "Groups",
-        ChatFilter.ARCHIVED to "Archived",
-    )
+private fun FilterChips(currentPage: Int, onSelect: (Int) -> Unit) {
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         modifier = Modifier.padding(bottom = 8.dp),
     ) {
-        items(labels) { (filter, label) ->
-            val selected = filter == current
+        items(PAGES.size) { index ->
+            val selected = index == currentPage
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (selected) palette.Blue else palette.Surface)
-                    .clickable { onSelect(filter) }
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                    .clip(RoundedCornerShape(100.dp))
+                    .background(if (selected) palette.Blue else palette.IncomingBubble)
+                    .clickable { onSelect(index) }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 Text(
-                    label,
-                    style = DesignType.body,
+                    PAGES[index].second,
+                    style = DesignType.label,
                     color = if (selected) Color.White else palette.TextPrimary,
                 )
             }
@@ -282,7 +349,6 @@ private fun FilterChips(current: ChatFilter, onSelect: (ChatFilter) -> Unit) {
 
 @Composable
 private fun PinnedCard(c: Conversation, onClick: () -> Unit) {
-    val context = androidx.compose.ui.platform.LocalContext.current
     Column(
         modifier = Modifier
             .width(167.dp)
@@ -323,24 +389,21 @@ private fun PinnedCard(c: Conversation, onClick: () -> Unit) {
 private fun ConversationRow(
     conversation: Conversation,
     onClick: () -> Unit,
-    onArchive: () -> Unit,
     viewModel: ConversationsViewModel,
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = { totalDistance -> totalDistance * 0.35f },
         confirmValueChange = { value ->
             when (value) {
                 // Swipe right→left: archive.
-                SwipeToDismissBoxValue.EndToStart -> onArchive()
-                // Swipe left→right: toggle read/unread.
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    if (conversation.unreadCount > 0) viewModel.markRead(conversation)
-                    else viewModel.markUnread(conversation)
-                }
+                SwipeToDismissBoxValue.EndToStart -> viewModel.toggleArchive(conversation)
+                // Swipe left→right: pin / unpin.
+                SwipeToDismissBoxValue.StartToEnd -> viewModel.togglePin(conversation)
                 else -> {}
             }
-            false // snap back; the row updates/disappears via state instead
+            false // snap back; the row moves/disappears via state instead
         },
     )
 
@@ -353,12 +416,12 @@ private fun ConversationRow(
                 horizontalArrangement = if (towardEnd) Arrangement.Start else Arrangement.End,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(if (towardEnd) palette.Success else palette.Blue)
+                    .background(if (towardEnd) palette.Away else palette.Blue)
                     .padding(horizontal = 24.dp),
             ) {
                 Icon(
-                    painterResource(if (towardEnd) R.drawable.ic_check else R.drawable.ic_archive),
-                    contentDescription = if (towardEnd) "Mark read/unread" else "Archive",
+                    painterResource(if (towardEnd) R.drawable.ic_star else R.drawable.ic_archive),
+                    contentDescription = if (towardEnd) "Pin" else "Archive",
                     tint = Color.White,
                 )
             }
@@ -385,6 +448,15 @@ private fun ConversationRow(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
                         )
+                        if (conversation.pinned) {
+                            Spacer(Modifier.width(6.dp))
+                            Icon(
+                                painterResource(R.drawable.ic_star),
+                                contentDescription = "Pinned",
+                                tint = palette.Away,
+                                modifier = Modifier.size(13.dp),
+                            )
+                        }
                         if (conversation.muted) {
                             Spacer(Modifier.width(6.dp))
                             Icon(
@@ -408,7 +480,7 @@ private fun ConversationRow(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         Formatters.conversationTime(context, conversation.date),
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Normal,
                         color = palette.TimeText,
                     )
@@ -449,46 +521,6 @@ private fun ConversationRow(
                 DropdownMenuItem(
                     text = { Text("Delete", color = palette.Error) },
                     onClick = { viewModel.delete(conversation); menuOpen = false },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BottomBar(
-    onHome: () -> Unit,
-    onScheduled: () -> Unit,
-    onSettings: () -> Unit,
-) {
-    Column(Modifier.background(palette.Surface)) {
-        androidx.compose.material3.HorizontalDivider(color = palette.Divider)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 20.dp),
-        ) {
-            IconButton(onClick = onHome) {
-                Icon(
-                    painterResource(R.drawable.ic_message_circle),
-                    contentDescription = "Chats",
-                    tint = palette.Blue,
-                )
-            }
-            IconButton(onClick = onScheduled) {
-                Icon(
-                    painterResource(R.drawable.ic_clock),
-                    contentDescription = "Scheduled",
-                    tint = palette.TextSecondary,
-                )
-            }
-            IconButton(onClick = onSettings) {
-                Icon(
-                    painterResource(R.drawable.ic_settings),
-                    contentDescription = "Settings",
-                    tint = palette.TextSecondary,
                 )
             }
         }

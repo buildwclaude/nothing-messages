@@ -346,10 +346,10 @@ private fun MessageBubble(
                 Column(
                     modifier = Modifier
                         .widthIn(max = 280.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(bubbleColor)
                         .combinedClickable(onClick = {}, onLongClick = { menuOpen = true })
-                        .padding(10.dp),
+                        .padding(horizontal = 14.dp, vertical = 9.dp),
                 ) {
                     if (incoming && isGroup && message.address != null) {
                         Text(
@@ -511,10 +511,10 @@ private fun ScheduledBubble(
             Column(
                 modifier = Modifier
                     .widthIn(max = 280.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .border(1.dp, palette.Blue, RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(18.dp))
+                    .border(1.dp, palette.Blue, RoundedCornerShape(18.dp))
                     .background(palette.Surface)
-                    .padding(10.dp),
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(

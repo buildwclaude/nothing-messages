@@ -26,11 +26,18 @@ enum class ChatFilter { ALL, UNREAD, GROUPS, ARCHIVED }
 data class ConversationsUiState(
     val loading: Boolean = true,
     val pinned: List<Conversation> = emptyList(),
-    val conversations: List<Conversation> = emptyList(),
-    val filter: ChatFilter = ChatFilter.ALL,
+    val conversations: List<Conversation> = emptyList(), // decorated, searched, time-filtered
     val searchQuery: String = "",
     val isDefaultSmsApp: Boolean = true,
-)
+) {
+    /** Rows for one pager page. Pinned rows live in the grid on the ALL page only. */
+    fun pageList(filter: ChatFilter): List<Conversation> = when (filter) {
+        ChatFilter.ALL -> conversations.filter { !it.archived && (searchQuery.isNotBlank() || !it.pinned) }
+        ChatFilter.UNREAD -> conversations.filter { !it.archived && it.unreadCount > 0 }
+        ChatFilter.GROUPS -> conversations.filter { !it.archived && it.isGroup }
+        ChatFilter.ARCHIVED -> conversations.filter { it.archived }
+    }
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -42,9 +49,9 @@ class ConversationsViewModel @Inject constructor(
     val defaultRole: DefaultSmsRole,
 ) : ViewModel() {
 
-    private val filter = MutableStateFlow(ChatFilter.ALL)
     private val searchQuery = MutableStateFlow("")
     private val roleRefresh = MutableStateFlow(0)
+    val timeWindow = MutableStateFlow(com.buildwclaude.messages.core.ui.components.TimeWindow.ALL)
 
     // Reload on provider changes AND on explicit refreshes (permission/role grants
     // don't fire the ContentObserver, so screen-resume bumps roleRefresh).
@@ -54,10 +61,10 @@ class ConversationsViewModel @Inject constructor(
     val state = combine(
         rawConversations,
         threadSettings.observeAll(),
-        filter,
         searchQuery,
+        timeWindow,
         roleRefresh,
-    ) { convs, settings, filter, query, _ ->
+    ) { convs, settings, query, window, _ ->
         val settingsMap = settings.associateBy { it.threadId }
         val decorated = convs.map { c ->
             val s = settingsMap[c.threadId]
@@ -67,32 +74,27 @@ class ConversationsViewModel @Inject constructor(
                 muted = s?.muted == true,
             )
         }
-        val searched = if (query.isBlank()) decorated else {
+        val cutoff = window.cutoff()
+        val timed = if (cutoff <= 0) decorated else decorated.filter { it.date >= cutoff }
+        val searched = if (query.isBlank()) timed else {
             val matchingThreads = telephony.searchThreads(query).toSet()
-            decorated.filter { c ->
+            timed.filter { c ->
                 c.threadId in matchingThreads ||
                     c.title.contains(query, ignoreCase = true) ||
                     c.recipients.any { it.address.contains(query) }
             }
         }
-        val visible = when (filter) {
-            ChatFilter.ALL -> searched.filter { !it.archived }
-            ChatFilter.UNREAD -> searched.filter { !it.archived && it.unreadCount > 0 }
-            ChatFilter.GROUPS -> searched.filter { !it.archived && it.isGroup }
-            ChatFilter.ARCHIVED -> searched.filter { it.archived }
-        }
         ConversationsUiState(
             loading = false,
-            pinned = if (filter == ChatFilter.ALL && query.isBlank()) visible.filter { it.pinned } else emptyList(),
-            conversations = if (filter == ChatFilter.ALL && query.isBlank()) visible.filter { !it.pinned } else visible,
-            filter = filter,
+            pinned = if (query.isBlank()) searched.filter { it.pinned && !it.archived } else emptyList(),
+            conversations = searched,
             searchQuery = query,
             isDefaultSmsApp = defaultRole.isDefault,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ConversationsUiState())
 
-    fun setFilter(f: ChatFilter) { filter.value = f }
     fun setSearch(q: String) { searchQuery.value = q }
+    fun setTimeWindow(w: com.buildwclaude.messages.core.ui.components.TimeWindow) { timeWindow.value = w }
     fun refreshRole() { roleRefresh.value++ ; contacts.invalidate() }
 
     private suspend fun setting(threadId: Long) =

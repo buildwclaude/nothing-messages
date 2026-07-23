@@ -12,58 +12,41 @@ import androidx.compose.ui.unit.sp
 import com.buildwclaude.messages.R
 
 /**
- * Headings: Doto (SIL OFL) — a dot-matrix face that matches the Nothing OS
- * aesthetic. Body: Space Grotesk (SIL OFL) — geometric, techy, readable.
- * Both are bundled; nothing is fetched at runtime.
+ * Inter (SIL OFL, bundled) — the open typeface closest to iOS's San Francisco,
+ * for the clean iMessage-like look the owner asked for.
  */
-val Doto = FontFamily(
+val Inter = FontFamily(
     Font(
-        R.font.doto,
-        weight = FontWeight.Bold,
-        variationSettings = FontVariation.Settings(FontVariation.weight(700)),
-    ),
-    Font(
-        R.font.doto,
-        weight = FontWeight.Black,
-        variationSettings = FontVariation.Settings(FontVariation.weight(900)),
-    ),
-)
-
-val SpaceGrotesk = FontFamily(
-    Font(
-        R.font.space_grotesk,
+        R.font.inter,
         weight = FontWeight.Normal,
         variationSettings = FontVariation.Settings(FontVariation.weight(400)),
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.inter,
         weight = FontWeight.Medium,
         variationSettings = FontVariation.Settings(FontVariation.weight(500)),
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.inter,
         weight = FontWeight.SemiBold,
         variationSettings = FontVariation.Settings(FontVariation.weight(600)),
     ),
     Font(
-        R.font.space_grotesk,
+        R.font.inter,
         weight = FontWeight.Bold,
         variationSettings = FontVariation.Settings(FontVariation.weight(700)),
     ),
 )
 
 object DesignType {
-    // Dot-matrix display styles for screen titles / section headers.
-    val pageTitle = TextStyle(fontFamily = Doto, fontWeight = FontWeight.Black, fontSize = 28.sp)
-    val screenTitle = TextStyle(fontFamily = Doto, fontWeight = FontWeight.Bold, fontSize = 21.sp)
-
-    // Readable UI text.
-    val itemTitle = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-    val body = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Normal, fontSize = 13.sp, lineHeight = 19.sp)
-    val bodyLarge = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
-    val label = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Medium, fontSize = 12.sp)
-    val caption = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Normal, fontSize = 11.sp)
-    val badge = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+    val pageTitle = TextStyle(fontFamily = Inter, fontWeight = FontWeight.Bold, fontSize = 26.sp)
+    val screenTitle = TextStyle(fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+    val itemTitle = TextStyle(fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+    val body = TextStyle(fontFamily = Inter, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp)
+    val bodyLarge = TextStyle(fontFamily = Inter, fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp)
+    val label = TextStyle(fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+    val caption = TextStyle(fontFamily = Inter, fontWeight = FontWeight.Normal, fontSize = 11.sp)
+    val badge = TextStyle(fontFamily = Inter, fontWeight = FontWeight.Bold, fontSize = 10.sp)
 }
 
 val MessagesTypography = Typography(

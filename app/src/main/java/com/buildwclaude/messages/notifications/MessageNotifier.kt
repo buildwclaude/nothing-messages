@@ -25,6 +25,7 @@ class MessageNotifier @Inject constructor(
     @ApplicationContext private val context: Context,
     private val contacts: ContactsRepository,
     private val threadSettings: ThreadSettingDao,
+    private val prefs: com.buildwclaude.messages.data.prefs.AppPrefs,
 ) {
     private val nm get() = NotificationManagerCompat.from(context)
 
@@ -67,13 +68,17 @@ class MessageNotifier @Inject constructor(
         if (!canPost()) return
         if (threadId > 0 && threadSettings.byThread(threadId)?.muted == true) return
 
+        // Privacy toggle: keep sensitive content (OTPs, personal texts) out of
+        // the notification shade and lock screen entirely.
+        val hide = prefs.hideContent.value
         val recipient = contacts.resolve(address)
-        val title = recipient.displayName
-        val channel = if (threadId > 0) conversationChannel(threadId, title) else CHANNEL_MESSAGES
+        val title = if (hide) "Messages" else recipient.displayName
+        val shownBody = if (hide) "New message" else body
+        val channel = if (threadId > 0) conversationChannel(threadId, if (hide) "Conversation" else title) else CHANNEL_MESSAGES
 
         val person = Person.Builder().setName(title).setKey(address).build()
         val style = NotificationCompat.MessagingStyle(Person.Builder().setName("You").build())
-            .addMessage(body, System.currentTimeMillis(), person)
+            .addMessage(shownBody, System.currentTimeMillis(), person)
 
         val contentIntent = PendingIntent.getActivity(
             context,
@@ -121,7 +126,11 @@ class MessageNotifier @Inject constructor(
             .setColor(0xFF2F80ED.toInt())
             .setStyle(style)
             .setContentTitle(title)
-            .setContentText(body)
+            .setContentText(shownBody)
+            .setVisibility(
+                if (hide) NotificationCompat.VISIBILITY_SECRET
+                else NotificationCompat.VISIBILITY_PRIVATE,
+            )
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)

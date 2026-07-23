@@ -8,9 +8,20 @@ on a Nothing Phone (3a) running Nothing OS 4.0 / Android 16. Sideload only — n
 - **No Google dependencies, no accounts, no servers.** The app itself has **no internet permission**.
   The only network activity is the carrier MMS transfer, which Android's own system service performs.
 - **UI** based on the "Messaging App UI" Figma community design (blue `#2F80ED`), with
-  light + dark themes and Nothing-style typography (Doto dot-matrix headings, Space Grotesk body).
+  light + dark themes and clean iMessage-style typography (Inter, the open SF-alike).
 - **Verified no-network build:** CI inspects every APK and fails the build if any internet
   permission is present.
+
+## Privacy & security features (all on-device)
+
+- **No internet permission** — the app physically cannot make a network connection; enforced
+  by Android and re-checked on every CI build.
+- **App lock** — require fingerprint / screen lock to open the app (uses Android's own biometric system).
+- **Hide message content in notifications** — pop-ups show only "New message", keeping OTP codes
+  and private texts off your lock screen and shade.
+- **Block screenshots** — stops screenshots/screen-recording of the app.
+- **Local blocklist** synced with Android's system blocked-numbers list.
+- **Local-only backup** (JSON file you control; no cloud).
 
 ## How to get the APK on your phone
 

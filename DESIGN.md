@@ -67,6 +67,9 @@ round caps — visually equivalent. No Compose Material icon placeholders are us
 - The design's bottom-nav "Calls" tab → dropped (see screen table). Nav bar carries
   Chats / Scheduled / Settings with the design's floating FAB.
 - The design is light-mode only; at the owner's request the app now also ships a **dark palette**
-  (follows the system setting) and swaps typography to **Doto** (dot-matrix, Nothing-style
-  headings) + **Space Grotesk** (body) — both SIL OFL, bundled. The original Figma palette
+  (follows the system setting). Typography is **Inter** (SIL OFL, bundled) — the open typeface
+  closest to Apple's San Francisco — for a clean iMessage-like feel. The original Figma palette
   remains the light theme.
+- Extra touches added on request: a swipeable pager for the All/Unread/Groups/Archived tabs,
+  a snapping **time-window wheel** above the bottom bar, and **Clawd** — a small code-drawn
+  animated crab — in the header's spare space.
