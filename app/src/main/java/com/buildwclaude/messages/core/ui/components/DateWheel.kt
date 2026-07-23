@@ -96,15 +96,15 @@ fun DateWheel(
                 .background(palette.IncomingBubble),
         )
         Row(Modifier.fillMaxWidth()) {
-            WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; touched = true; emit() }, Modifier.weight(1f))
-            WheelColumn(MONTHS, monthIdx, true, hapticsEnabled, { monthIdx = it; touched = true; emit() }, Modifier.weight(1.2f))
-            WheelColumn(years, yearIdx, false, hapticsEnabled, { yearIdx = it; touched = true; emit() }, Modifier.weight(1.3f))
+            WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; touched = true; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(MONTHS, monthIdx, true, hapticsEnabled, { monthIdx = it; touched = true; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(years, yearIdx, false, hapticsEnabled, { yearIdx = it; touched = true; emit() }, Modifier.weight(1f), 15)
         }
     }
 }
 
 /**
- * Full Day / Month / Year / Hour / Minute / AM-PM dial for the scheduler.
+ * Full Day / Month / Year / Hour / Minute dial for the scheduler, 24-hour time.
  * Emits the selected instant on every change.
  */
 @Composable
@@ -114,31 +114,26 @@ fun DateTimeWheel(
     modifier: Modifier = Modifier,
 ) {
     val start = remember { Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, 1) } }
-    val currentYear = start.get(Calendar.YEAR)
-    val minYear = currentYear
+    val minYear = start.get(Calendar.YEAR)
     val years = remember { (minYear..minYear + 5).map { it.toString() } }
     val days = remember { (1..31).map { it.toString() } }
-    val hours = remember { (1..12).map { it.toString() } }
+    val hours = remember { (0..23).map { it.toString().padStart(2, '0') } }
     val minutes = remember { (0..59).map { it.toString().padStart(2, '0') } }
-    val ampm = remember { listOf("AM", "PM") }
 
-    val startHour12 = ((start.get(Calendar.HOUR_OF_DAY) + 11) % 12)
     var dayIdx by remember { mutableIntStateOf(start.get(Calendar.DAY_OF_MONTH) - 1) }
     var monthIdx by remember { mutableIntStateOf(start.get(Calendar.MONTH)) }
     var yearIdx by remember { mutableIntStateOf(0) }
-    var hourIdx by remember { mutableIntStateOf(startHour12) }
+    var hourIdx by remember { mutableIntStateOf(start.get(Calendar.HOUR_OF_DAY)) }
     var minuteIdx by remember { mutableIntStateOf(start.get(Calendar.MINUTE)) }
-    var ampmIdx by remember { mutableIntStateOf(if (start.get(Calendar.AM_PM) == Calendar.PM) 1 else 0) }
 
     fun emit() {
-        val hour24 = (hourIdx + 1) % 12 + if (ampmIdx == 1) 12 else 0
         val cal = Calendar.getInstance().apply {
             clear()
             set(Calendar.YEAR, minYear + yearIdx)
             set(Calendar.MONTH, monthIdx)
             val maxDay = getActualMaximum(Calendar.DAY_OF_MONTH)
             set(Calendar.DAY_OF_MONTH, (dayIdx + 1).coerceAtMost(maxDay))
-            set(Calendar.HOUR_OF_DAY, hour24)
+            set(Calendar.HOUR_OF_DAY, hourIdx)
             set(Calendar.MINUTE, minuteIdx)
         }
         onChange(cal.timeInMillis)
@@ -159,11 +154,10 @@ fun DateTimeWheel(
         )
         Row(Modifier.fillMaxWidth()) {
             WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; emit() }, Modifier.weight(1f), 15)
-            WheelColumn(MONTHS, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.weight(1.2f), 15)
-            WheelColumn(years, yearIdx, false, hapticsEnabled, { yearIdx = it; emit() }, Modifier.weight(1.3f), 15)
-            WheelColumn(hours, hourIdx, true, hapticsEnabled, { hourIdx = it; emit() }, Modifier.weight(0.9f), 15)
-            WheelColumn(minutes, minuteIdx, true, hapticsEnabled, { minuteIdx = it; emit() }, Modifier.weight(0.9f), 15)
-            WheelColumn(ampm, ampmIdx, false, hapticsEnabled, { ampmIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(MONTHS, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(years, yearIdx, false, hapticsEnabled, { yearIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(hours, hourIdx, true, hapticsEnabled, { hourIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(minutes, minuteIdx, true, hapticsEnabled, { minuteIdx = it; emit() }, Modifier.weight(1f), 15)
         }
     }
 }
