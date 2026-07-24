@@ -62,32 +62,41 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun promptUnlock() {
-        val prompt = android.hardware.biometrics.BiometricPrompt.Builder(this)
-            .setTitle("Unlock Messages")
-            .setAllowedAuthenticators(
+        try {
+            val authenticators =
                 android.hardware.biometrics.BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                    android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL,
-            )
-            .build()
-        prompt.authenticate(
-            android.os.CancellationSignal(),
-            mainExecutor,
-            object : android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(
-                    result: android.hardware.biometrics.BiometricPrompt.AuthenticationResult?,
-                ) {
-                    unlocked.value = true
-                }
-
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence?) {
-                    // No PIN/biometric enrolled on the device: app lock can't work — disable it.
-                    if (errorCode == android.hardware.biometrics.BiometricPrompt.BIOMETRIC_ERROR_NO_DEVICE_CREDENTIAL) {
-                        appPrefs.setAppLock(false)
+                    android.hardware.biometrics.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            val bm = getSystemService(android.hardware.biometrics.BiometricManager::class.java)
+            if (bm == null ||
+                bm.canAuthenticate(authenticators) !=
+                android.hardware.biometrics.BiometricManager.BIOMETRIC_SUCCESS
+            ) {
+                // No fingerprint or screen lock set up — don't trap the user out.
+                appPrefs.setAppLock(false)
+                unlocked.value = true
+                return
+            }
+            val prompt = android.hardware.biometrics.BiometricPrompt.Builder(this)
+                .setTitle("Unlock Messages")
+                .setAllowedAuthenticators(authenticators)
+                .build()
+            prompt.authenticate(
+                android.os.CancellationSignal(),
+                mainExecutor,
+                object : android.hardware.biometrics.BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(
+                        result: android.hardware.biometrics.BiometricPrompt.AuthenticationResult?,
+                    ) {
                         unlocked.value = true
                     }
-                }
-            },
-        )
+                    // A cancel/error just leaves the lock screen up with a retry button.
+                },
+            )
+        } catch (t: Throwable) {
+            // App lock must never crash the app; fail open so Messages stays usable.
+            appPrefs.setAppLock(false)
+            unlocked.value = true
+        }
     }
 
     private val permissionLauncher =
@@ -98,6 +107,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Start the session unlocked when app lock is off; when it's on, require auth.
+        // (This also means enabling the toggle mid-session won't instantly lock you out.)
+        unlocked.value = !appPrefs.appLock.value
         enableEdgeToEdge()
         setContent {
             MessagesTheme {

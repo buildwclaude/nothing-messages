@@ -32,10 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -155,7 +152,7 @@ fun ConversationsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 2.dp),
             ) {
                 Text(
                     text = if (searchOpen) "Search" else "Messages",
@@ -244,7 +241,7 @@ private fun ConversationPage(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                 ) {
                     items(state.pinned, key = { it.threadId }) { c ->
-                        PinnedCard(c) { onOpenThread(c.threadId, null) }
+                        PinnedCard(c, viewModel) { onOpenThread(c.threadId, null) }
                     }
                 }
             }
@@ -344,44 +341,75 @@ private fun FilterChips(currentPage: Int, onSelect: (Int) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PinnedCard(c: Conversation, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .width(167.dp)
-            .height(102.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(palette.IncomingBubble)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-    ) {
-        Row(verticalAlignment = Alignment.Top) {
-            Avatar(c.recipients.firstOrNull(), size = 36.dp)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                c.title,
-                style = DesignType.itemTitle,
-                color = palette.TextPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-            if (c.unreadCount > 0) {
-                Box(Modifier.size(12.dp).clip(CircleShape).background(palette.Blue))
+private fun PinnedCard(c: Conversation, viewModel: ConversationsViewModel, onClick: () -> Unit) {
+    var menuOpen by remember { mutableStateOf(false) }
+    Box {
+        Column(
+            modifier = Modifier
+                .width(167.dp)
+                .height(102.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(palette.IncomingBubble)
+                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
+                .padding(16.dp),
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Avatar(c.recipients.firstOrNull(), size = 36.dp)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    c.title,
+                    style = DesignType.itemTitle,
+                    color = palette.TextPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    painterResource(R.drawable.ic_star),
+                    contentDescription = "Pinned",
+                    tint = palette.Away,
+                    modifier = Modifier.size(13.dp),
+                )
             }
+            Spacer(Modifier.weight(1f))
+            Text(
+                c.snippet ?: "",
+                style = DesignType.body,
+                color = palette.TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-        Spacer(Modifier.weight(1f))
-        Text(
-            c.snippet ?: "",
-            style = DesignType.body,
-            color = palette.TextSecondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            DropdownMenuItem(
+                text = { Text("Open") },
+                onClick = { onClick(); menuOpen = false },
+            )
+            DropdownMenuItem(
+                text = { Text("Unpin") },
+                onClick = { viewModel.togglePin(c); menuOpen = false },
+            )
+            DropdownMenuItem(
+                text = { Text(if (c.muted) "Unmute" else "Mute") },
+                onClick = { viewModel.toggleMute(c); menuOpen = false },
+            )
+            DropdownMenuItem(
+                text = { Text("Archive") },
+                onClick = { viewModel.toggleArchive(c); menuOpen = false },
+            )
+            DropdownMenuItem(
+                text = { Text("Delete", color = palette.Error) },
+                onClick = { viewModel.delete(c); menuOpen = false },
+            )
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+// Note: no horizontal swipe on rows — that gesture belongs to the section pager.
+// Pin / archive / etc. live in the long-press menu below.
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ConversationRow(
     conversation: Conversation,
@@ -390,49 +418,16 @@ private fun ConversationRow(
 ) {
     val context = LocalContext.current
     var menuOpen by remember { mutableStateOf(false) }
-    val dismissState = rememberSwipeToDismissBoxState(
-        positionalThreshold = { totalDistance -> totalDistance * 0.35f },
-        confirmValueChange = { value ->
-            when (value) {
-                // Swipe right→left: archive.
-                SwipeToDismissBoxValue.EndToStart -> viewModel.toggleArchive(conversation)
-                // Swipe left→right: pin / unpin.
-                SwipeToDismissBoxValue.StartToEnd -> viewModel.togglePin(conversation)
-                else -> {}
-            }
-            false // snap back; the row moves/disappears via state instead
-        },
-    )
 
-    SwipeToDismissBox(
-        state = dismissState,
-        backgroundContent = {
-            val towardEnd = dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = if (towardEnd) Arrangement.Start else Arrangement.End,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(if (towardEnd) palette.Away else palette.Blue)
-                    .padding(horizontal = 24.dp),
-            ) {
-                Icon(
-                    painterResource(if (towardEnd) R.drawable.ic_star else R.drawable.ic_archive),
-                    contentDescription = if (towardEnd) "Pin" else "Archive",
-                    tint = Color.White,
-                )
-            }
-        },
-    ) {
-        Box(Modifier.background(palette.Surface)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
-                    .padding(horizontal = 16.dp),
-            ) {
+    Box(Modifier.background(palette.Surface)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
+                .padding(horizontal = 16.dp),
+        ) {
                 Avatar(conversation.recipients.firstOrNull(), size = 48.dp)
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f)) {
@@ -521,5 +516,4 @@ private fun ConversationRow(
                 )
             }
         }
-    }
 }
