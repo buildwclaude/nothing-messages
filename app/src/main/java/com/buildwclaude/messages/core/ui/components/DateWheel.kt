@@ -95,9 +95,9 @@ fun DateWheel(
                 .background(palette.IncomingBubble),
         )
         Row(Modifier.fillMaxWidth().padding(horizontal = 23.dp)) {
-            WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; emit() }, Modifier.weight(1f), 15)
-            WheelColumn(months, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.weight(1f), 15)
-            WheelColumn(years, yearIdx, true, hapticsEnabled, { yearIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; emit() }, Modifier.weight(1f), 15, snapToAllOnBigFling = true)
+            WheelColumn(months, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.weight(1f), 15, snapToAllOnBigFling = true)
+            WheelColumn(years, yearIdx, true, hapticsEnabled, { yearIdx = it; emit() }, Modifier.weight(1f), 15, snapToAllOnBigFling = true)
         }
     }
 }
@@ -177,11 +177,18 @@ private fun WheelColumn(
     onCentered: (Int) -> Unit,
     modifier: Modifier = Modifier,
     fontSize: Int = 18,
+    snapToAllOnBigFling: Boolean = false,
 ) {
     val size = items.size
+    // The centred row is firstVisibleItemIndex + centerOffset (top padding = centerOffset rows).
+    val centerOffset = VISIBLE_ROWS / 2
     // Looping columns render a huge list mapped by modulo, starting in the middle.
     val bigCount = if (loop) size * 2000 else size
-    val startPos = if (loop) size * 1000 + initialIndex else initialIndex
+    val startPos = if (loop) {
+        size * 1000 + initialIndex - centerOffset
+    } else {
+        (initialIndex - centerOffset).coerceAtLeast(0)
+    }
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = startPos)
     val fling = rememberSnapFlingBehavior(lazyListState = listState)
     val density = LocalDensity.current
@@ -189,10 +196,36 @@ private fun WheelColumn(
     val rowPx = with(density) { ROW_HEIGHT_DP.dp.toPx() }
     val sidePad = (ROW_HEIGHT_DP * ((VISIBLE_ROWS - 1) / 2)).dp
 
-    // Only react once the user has actually touched this column.
     var userMoved by remember { mutableStateOf(false) }
+    var snapping by remember { mutableStateOf(false) }
+    var flingStart by remember { mutableIntStateOf(-1) }
+
+    // Track scrolling; on a very big fling (spun more than ~2 full turns) glide
+    // back to the ∞ entry so the user can clear the filter with a hard flick.
     LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }.collect { if (it) userMoved = true }
+        snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
+            if (scrolling) {
+                userMoved = true
+                if (flingStart < 0) flingStart = listState.firstVisibleItemIndex
+            } else {
+                val start = flingStart
+                flingStart = -1
+                if (snapToAllOnBigFling && !snapping && start >= 0) {
+                    val cur = listState.firstVisibleItemIndex
+                    val traversed = abs(cur - start)
+                    if (traversed > size * 2) {
+                        snapping = true
+                        // Land on ∞ (value 0): need firstVisible % size == size-1 so that
+                        // the centred row (firstVisible + centerOffset) lands on a multiple of size.
+                        val mul = cur / size
+                        val targetF = if (cur >= start) (mul + 1) * size - 1 else mul * size - 1
+                        listState.animateScrollToItem(targetF.coerceAtLeast(0))
+                        onCentered(0)                              // ∞ = show all
+                        snapping = false
+                    }
+                }
+            }
+        }
     }
 
     // Live: report the centred value (and tick) each time it changes under the line.
@@ -200,7 +233,7 @@ private fun WheelColumn(
         snapshotFlow { listState.layoutInfo.centeredIndex(size) }
             .distinctUntilChanged()
             .collect { idx ->
-                if (idx != null && userMoved) {
+                if (idx != null && userMoved && !snapping) {
                     onCentered(idx)
                     if (hapticsEnabled) {
                         val c = if (Build.VERSION.SDK_INT >= 34) {
