@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.buildwclaude.messages.core.ui.theme.Inter
 import com.buildwclaude.messages.core.ui.theme.palette
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import kotlin.math.abs
 
@@ -196,6 +198,7 @@ private fun WheelColumn(
     val rowPx = with(density) { ROW_HEIGHT_DP.dp.toPx() }
     val sidePad = (ROW_HEIGHT_DP * ((VISIBLE_ROWS - 1) / 2)).dp
 
+    val scope = rememberCoroutineScope()
     var userMoved by remember { mutableStateOf(false) }
     var snapping by remember { mutableStateOf(false) }
     var flingStart by remember { mutableIntStateOf(-1) }
@@ -206,22 +209,28 @@ private fun WheelColumn(
         snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
             if (scrolling) {
                 userMoved = true
-                if (flingStart < 0) flingStart = listState.firstVisibleItemIndex
+                if (flingStart < 0 && !snapping) flingStart = listState.firstVisibleItemIndex
             } else {
                 val start = flingStart
                 flingStart = -1
                 if (snapToAllOnBigFling && !snapping && start >= 0) {
                     val cur = listState.firstVisibleItemIndex
-                    val traversed = abs(cur - start)
-                    if (traversed > size * 2) {
-                        snapping = true
+                    if (abs(cur - start) > size * 2) {
                         // Land on ∞ (value 0): need firstVisible % size == size-1 so that
                         // the centred row (firstVisible + centerOffset) lands on a multiple of size.
                         val mul = cur / size
                         val targetF = if (cur >= start) (mul + 1) * size - 1 else mul * size - 1
-                        listState.animateScrollToItem(targetF.coerceAtLeast(0))
-                        onCentered(0)                              // ∞ = show all
-                        snapping = false
+                        snapping = true
+                        // Run the settle in its own coroutine so an interruption (user
+                        // grabbing the wheel mid-snap) can't leave `snapping` stuck true.
+                        scope.launch {
+                            try {
+                                listState.animateScrollToItem(targetF.coerceAtLeast(0))
+                                onCentered(0)                      // ∞ = show all
+                            } finally {
+                                snapping = false
+                            }
+                        }
                     }
                 }
             }
