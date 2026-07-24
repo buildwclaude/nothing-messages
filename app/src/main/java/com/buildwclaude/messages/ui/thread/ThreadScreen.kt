@@ -423,21 +423,21 @@ private fun MessageBubble(
                             color = timeColor,
                         )
                         if (!incoming) {
-                            Spacer(Modifier.width(4.dp))
-                            when (message.delivery) {
-                                DeliveryState.SENDING -> Icon(
-                                    painterResource(R.drawable.ic_clock), "Sending",
+                            val (statusIcon, statusWord) = when (message.delivery) {
+                                DeliveryState.SENDING -> R.drawable.ic_clock to "Sending…"
+                                DeliveryState.SENT -> R.drawable.ic_check to "Sent"
+                                DeliveryState.DELIVERED -> R.drawable.ic_check_circle to "Delivered"
+                                DeliveryState.FAILED -> R.drawable.ic_alert_circle to "Not sent"
+                                else -> null to null
+                            }
+                            if (statusIcon != null) {
+                                Spacer(Modifier.width(4.dp))
+                                Icon(
+                                    painterResource(statusIcon), statusWord,
                                     tint = timeColor, modifier = Modifier.size(10.dp),
                                 )
-                                DeliveryState.SENT -> Icon(
-                                    painterResource(R.drawable.ic_check), "Sent",
-                                    tint = timeColor, modifier = Modifier.size(10.dp),
-                                )
-                                DeliveryState.DELIVERED -> Icon(
-                                    painterResource(R.drawable.ic_check_circle), "Delivered",
-                                    tint = timeColor, modifier = Modifier.size(10.dp),
-                                )
-                                else -> {}
+                                Spacer(Modifier.width(3.dp))
+                                Text(statusWord ?: "", fontSize = 9.sp, color = timeColor)
                             }
                         }
                     }

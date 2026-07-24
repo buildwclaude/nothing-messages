@@ -139,10 +139,11 @@ fun ConversationsScreen(
         },
     ) { padding ->
         Column(
+            // Scaffold's `padding` already offsets below the status bar; adding
+            // statusBarsPadding() as well double-spaced it, leaving a gap under the bar.
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .statusBarsPadding(),
+                .padding(padding),
         ) {
             if (!state.isDefaultSmsApp) {
                 DefaultAppBanner(onRequestDefaultRole)

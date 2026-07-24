@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -21,10 +23,17 @@ import com.buildwclaude.messages.core.ui.theme.Inter
 import com.buildwclaude.messages.domain.model.Recipient
 import kotlin.math.absoluteValue
 
-private val AvatarPalette = listOf(
-    Color(0xFF2F80ED), Color(0xFF9B51E0), Color(0xFF27AE60),
-    Color(0xFFF2994A), Color(0xFF2D9CDB), Color(0xFFEB5757),
-    Color(0xFF21205A),
+// iMessage-style gradient avatars: each contact gets a two-stop diagonal gradient
+// with white initials on top.
+private val AvatarGradients = listOf(
+    Color(0xFF56CCF2) to Color(0xFF2F80ED), // blue
+    Color(0xFFB06AB3) to Color(0xFF4568DC), // purple
+    Color(0xFFF093FB) to Color(0xFFF5576C), // pink
+    Color(0xFF43E97B) to Color(0xFF38B2A3), // green
+    Color(0xFFFDC830) to Color(0xFFF37335), // orange
+    Color(0xFF4FACFE) to Color(0xFF00C2FE), // cyan
+    Color(0xFFFF758C) to Color(0xFFFF7EB3), // rose
+    Color(0xFFA18CD1) to Color(0xFF6A5ACD), // violet
 )
 
 @Composable
@@ -38,17 +47,22 @@ fun Avatar(recipient: Recipient?, size: Dp, modifier: Modifier = Modifier) {
             modifier = modifier.size(size).clip(CircleShape),
         )
     } else {
-        val color = AvatarPalette[name.hashCode().absoluteValue % AvatarPalette.size]
+        val (start, end) = AvatarGradients[name.hashCode().absoluteValue % AvatarGradients.size]
+        val brush = Brush.linearGradient(
+            colors = listOf(start, end),
+            start = Offset.Zero,
+            end = Offset.Infinite,
+        )
         Box(
             contentAlignment = Alignment.Center,
-            modifier = modifier.size(size).clip(CircleShape).background(color.copy(alpha = 0.15f)),
+            modifier = modifier.size(size).clip(CircleShape).background(brush),
         ) {
             Text(
                 text = initials(name),
-                color = color,
+                color = Color.White,
                 fontFamily = Inter,
-                fontWeight = FontWeight.Medium,
-                fontSize = (size.value * 0.36f).sp,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = (size.value * 0.38f).sp,
             )
         }
     }
