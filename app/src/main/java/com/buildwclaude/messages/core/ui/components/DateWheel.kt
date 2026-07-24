@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -28,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
@@ -48,61 +46,58 @@ private val MONTHS = listOf(
 private const val ROW_HEIGHT_DP = 30
 private const val VISIBLE_ROWS = 3
 
+const val WHEEL_ALL = "∞"
+
 /**
- * iOS-style Day / Month / Year scroll dial. All three columns loop endlessly.
- * Moving it filters the conversation list live to messages on or after the
- * chosen date. Column widths match the scheduler dial; the group is centred.
+ * iOS-style Day / Month / Year scroll dial. Every column has an ∞ ("all") entry
+ * that is the default, so nothing is filtered until the user picks a value.
+ * Any column left on ∞ is treated as "any". Spans the full width, columns loop.
+ * Reports (day, month0Based, year) with null meaning ∞.
  */
 @Composable
 fun DateWheel(
     hapticsEnabled: Boolean,
-    onCutoffChange: (Long) -> Unit,
+    onFilterChange: (day: Int?, month: Int?, year: Int?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val now = remember { Calendar.getInstance() }
     val currentYear = now.get(Calendar.YEAR)
     val minYear = currentYear - 10
-    val years = remember { (minYear..currentYear).map { it.toString() } }
-    val days = remember { (1..31).map { it.toString() } }
+    // Index 0 in each column is ∞ (no constraint).
+    val years = remember { listOf(WHEEL_ALL) + (minYear..currentYear).map { it.toString() } }
+    val days = remember { listOf(WHEEL_ALL) + (1..31).map { it.toString() } }
+    val months = remember { listOf(WHEEL_ALL) + MONTHS }
 
-    var dayIdx by remember { mutableIntStateOf(now.get(Calendar.DAY_OF_MONTH) - 1) }
-    var monthIdx by remember { mutableIntStateOf(now.get(Calendar.MONTH)) }
-    var yearIdx by remember { mutableIntStateOf(years.lastIndex) }
+    var dayIdx by remember { mutableIntStateOf(0) }
+    var monthIdx by remember { mutableIntStateOf(0) }
+    var yearIdx by remember { mutableIntStateOf(0) }
 
     fun emit() {
-        val cal = Calendar.getInstance().apply {
-            clear()
-            set(Calendar.YEAR, minYear + yearIdx)
-            set(Calendar.MONTH, monthIdx)
-            val maxDay = getActualMaximum(Calendar.DAY_OF_MONTH)
-            set(Calendar.DAY_OF_MONTH, (dayIdx + 1).coerceAtMost(maxDay))
-        }
-        onCutoffChange(cal.timeInMillis)
+        val day = if (dayIdx == 0) null else dayIdx                 // index i -> day i
+        val month = if (monthIdx == 0) null else monthIdx - 1        // Calendar.MONTH is 0-based
+        val year = if (yearIdx == 0) null else years[yearIdx].toIntOrNull()
+        onFilterChange(day, month, year)
     }
-
-    // Match the scheduler's per-column width (5 columns across a 24dp-padded row).
-    val colW = ((LocalConfiguration.current.screenWidthDp - 48) / 5).dp
 
     Box(
         modifier
             .fillMaxWidth()
             .height((ROW_HEIGHT_DP * VISIBLE_ROWS).dp),
-        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            // Highlight band, sized to the column group, one row tall.
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .padding(vertical = ((VISIBLE_ROWS - 1) * ROW_HEIGHT_DP / 2).dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(palette.IncomingBubble),
-            )
-            Row {
-                WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; emit() }, Modifier.width(colW), 15)
-                WheelColumn(MONTHS, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.width(colW), 15)
-                WheelColumn(years, yearIdx, true, hapticsEnabled, { yearIdx = it; emit() }, Modifier.width(colW), 15)
-            }
+        // Full-width highlight band, one row tall.
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp)
+                .height(ROW_HEIGHT_DP.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(palette.IncomingBubble),
+        )
+        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
+            WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(months, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.weight(1f), 15)
+            WheelColumn(years, yearIdx, true, hapticsEnabled, { yearIdx = it; emit() }, Modifier.weight(1f), 15)
         }
     }
 }

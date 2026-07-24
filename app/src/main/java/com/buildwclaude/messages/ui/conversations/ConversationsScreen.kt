@@ -91,7 +91,7 @@ fun ConversationsScreen(
         containerColor = palette.Surface,
         bottomBar = {
             Column(Modifier.background(palette.Surface)) {
-                DateWheel(hapticsEnabled = haptics, onCutoffChange = viewModel::setDateCutoff)
+                DateWheel(hapticsEnabled = haptics, onFilterChange = viewModel::setDateFilter)
                 HorizontalDivider(color = palette.Divider)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -23,6 +23,11 @@ import javax.inject.Inject
 
 enum class ChatFilter { ALL, UNREAD, GROUPS, ARCHIVED }
 
+/** Date dial selection; null component = ∞ (any). */
+data class DateFilter(val day: Int? = null, val month: Int? = null, val year: Int? = null) {
+    val isEmpty: Boolean get() = day == null && month == null && year == null
+}
+
 data class ConversationsUiState(
     val loading: Boolean = true,
     val pinned: List<Conversation> = emptyList(),
@@ -53,8 +58,8 @@ class ConversationsViewModel @Inject constructor(
     val haptics = prefs.haptics
     private val searchQuery = MutableStateFlow("")
     private val roleRefresh = MutableStateFlow(0)
-    // 0 = show all; otherwise hide conversations whose last message is before this instant.
-    val dateCutoff = MutableStateFlow(0L)
+    // null components mean ∞ (any). All null = no date filter, show everything.
+    val dateFilter = MutableStateFlow(DateFilter())
 
     // Reload on provider changes AND on explicit refreshes (permission/role grants
     // don't fire the ContentObserver, so screen-resume bumps roleRefresh).
@@ -65,9 +70,9 @@ class ConversationsViewModel @Inject constructor(
         rawConversations,
         threadSettings.observeAll(),
         searchQuery,
-        dateCutoff,
+        dateFilter,
         roleRefresh,
-    ) { convs, settings, query, cutoff, _ ->
+    ) { convs, settings, query, filter, _ ->
         val settingsMap = settings.associateBy { it.threadId }
         val decorated = convs.map { c ->
             val s = settingsMap[c.threadId]
@@ -77,7 +82,15 @@ class ConversationsViewModel @Inject constructor(
                 muted = s?.muted == true,
             )
         }
-        val timed = if (cutoff <= 0) decorated else decorated.filter { it.date >= cutoff }
+        val timed = if (filter.isEmpty) decorated else {
+            val cal = java.util.Calendar.getInstance()
+            decorated.filter { conv ->
+                cal.timeInMillis = conv.date
+                (filter.day == null || cal.get(java.util.Calendar.DAY_OF_MONTH) == filter.day) &&
+                    (filter.month == null || cal.get(java.util.Calendar.MONTH) == filter.month) &&
+                    (filter.year == null || cal.get(java.util.Calendar.YEAR) == filter.year)
+            }
+        }
         val searched = if (query.isBlank()) timed else {
             val matchingThreads = telephony.searchThreads(query).toSet()
             timed.filter { c ->
@@ -96,7 +109,9 @@ class ConversationsViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ConversationsUiState())
 
     fun setSearch(q: String) { searchQuery.value = q }
-    fun setDateCutoff(cutoff: Long) { dateCutoff.value = cutoff }
+    fun setDateFilter(day: Int?, month: Int?, year: Int?) {
+        dateFilter.value = DateFilter(day, month, year)
+    }
     fun refreshRole() { roleRefresh.value++ ; contacts.invalidate() }
 
     private suspend fun setting(threadId: Long) =
