@@ -89,12 +89,12 @@ fun DateWheel(
             Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp)
+                .padding(horizontal = 23.dp)
                 .height(ROW_HEIGHT_DP.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(palette.IncomingBubble),
         )
-        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 23.dp)) {
             WheelColumn(days, dayIdx, true, hapticsEnabled, { dayIdx = it; emit() }, Modifier.weight(1f), 15)
             WheelColumn(months, monthIdx, true, hapticsEnabled, { monthIdx = it; emit() }, Modifier.weight(1f), 15)
             WheelColumn(years, yearIdx, true, hapticsEnabled, { yearIdx = it; emit() }, Modifier.weight(1f), 15)
